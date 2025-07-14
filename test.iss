@@ -1,7 +1,7 @@
 ; -- ОБЯЗАТЕЛЬНЫЕ ИНКЛЮДЫ --
 #pragma include __INCLUDE__ + ";" + ReadReg(HKLM, "Software\Microsoft\Windows\CurrentVersion\Uninstall\Inno Setup 6_is1", "InstallLocation")
 #pragma include __INCLUDE__ + ";" + "C:\Program Files (x86)\Inno Download Plugin"
-#include <idp.iss>  ; Для загрузки файлов
+#include <idp.iss> ; Для загрузки файлов
 
 [Setup]
 AppName=Русификатор DELTARUNE
@@ -23,6 +23,7 @@ Source: "DeltarunePatcherCLI.zip"; DestDir: "{tmp}"; Flags: deleteafterinstall
 [Code]
 var
   GamePathPage: TInputDirWizardPage;
+  ProgressPage: TOutputProgressWizardPage;
 
 procedure InitializeWizard;
 begin
@@ -34,6 +35,8 @@ begin
     False, ''
   );
   GamePathPage.Add('');
+
+  ProgressPage := CreateOutputProgressPage('Выполнение установки', 'Пожалуйста, подождите, пока выполняется установка...');
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
@@ -49,31 +52,35 @@ begin
   end;
 end;
 
-// УДАЛЕНА НЕКОРРЕКТНАЯ ФУНКЦИЯ DirExists - ИСПОЛЬЗУЕМ ВСТРОЕННУЮ
-
 procedure Unzip(ZipFile, TargetDir: string);
 var
   Shell: Variant;
   ZipFolder: Variant;
-  i: Integer;
+  i, TotalItems: Integer;
 begin
   try
     Shell := CreateOleObject('Shell.Application');
     if VarIsNull(Shell) then
       RaiseException('Не удалось создать объект Shell.Application');
-
+      
     ZipFolder := Shell.NameSpace(ZipFile);
     if VarIsClear(ZipFolder) then
       RaiseException('Ошибка открытия ZIP архива: ' + ZipFile);
-
-    // ИСПОЛЬЗУЕМ ВСТРОЕННУЮ ФУНКЦИЮ DirExists
+      
     if not DirExists(TargetDir) then
       if not ForceDirectories(TargetDir) then
         RaiseException('Не удалось создать директорию: ' + TargetDir);
 
-    for i := 0 to ZipFolder.Items.Count - 1 do
+    TotalItems := ZipFolder.Items.Count;
+    if TotalItems = 0 then
+      RaiseException('ZIP архив пуст: ' + ZipFile);
+
+    ProgressPage.SetText('Распаковка файлов...', 'Пожалуйста, подождите');
+
+    for i := 0 to TotalItems - 1 do
     begin
       Shell.NameSpace(TargetDir).CopyHere(ZipFolder.Items.Item(i), 4 + 16);
+      ProgressPage.SetProgress(i, TotalItems);
     end;
     Sleep(1000);
   except
@@ -93,48 +100,74 @@ begin
   PatcherZipPath := ExpandConstant('{tmp}\DeltarunePatcherCLI.zip');
   GamePath := GamePathPage.Values[0];
 
+  ProgressPage.SetText('Загрузка файлов...', 'Пожалуйста, подождите');
+  ProgressPage.Show;
+  
   try
-    if not idpDownloadFile('https://filldor.ru/deltaRU/lang.zip', LangZipPath) then
-      RaiseException('Ошибка загрузки файла lang.zip');
+    try
+      // Загрузка языковых файлов
+      ProgressPage.SetText('Загрузка языковых файлов...', '');
+      if not idpDownloadFile('https://filldor.ru/deltaRU/lang.zip', LangZipPath) then
+        RaiseException('Ошибка загрузки файла lang.zip');
+      ProgressPage.SetProgress(33, 100);
 
-    if not idpDownloadFile('https://filldor.ru/deltaRU/scripts.zip', ScriptsZipPath) then
-      RaiseException('Ошибка загрузки файла scripts.zip');
+      // Загрузка скриптов патчера
+      ProgressPage.SetText('Загрузка скриптов патчера...', '');
+      if not idpDownloadFile('https://filldor.ru/deltaRU/scripts.zip', ScriptsZipPath) then
+        RaiseException('Ошибка загрузки файла scripts.zip');
+      ProgressPage.SetProgress(66, 100);
 
-    Unzip(PatcherZipPath, ExpandConstant('{tmp}'));
-    PatcherPath := ExpandConstant('{tmp}\DeltaPatcherCLI.exe');
+      // Распаковка патчера
+      ProgressPage.SetText('Распаковка патчера...', '');
+      Unzip(PatcherZipPath, ExpandConstant('{tmp}'));
+      ProgressPage.SetProgress(100, 100);
 
-    if FileExists(LangZipPath) then
-      Unzip(LangZipPath, GamePath)
-    else
-      RaiseException('Файл lang.zip не найден');
-
-    if FileExists(ScriptsZipPath) then
-      Unzip(ScriptsZipPath, ExpandConstant('{tmp}\scripts'))
-    else
-      RaiseException('Файл scripts.zip не найден');
-
-    if FileExists(PatcherPath) then
-    begin
-      // УБРАН AddQuotes - КАВЫЧКИ УЖЕ ФОРМИРУЮТСЯ В Format
-      if Exec(
-        PatcherPath,
-        Format('--game "%s" --scripts "%s"', [
-          GamePath,  // БЕЗ AddQuotes
-          ExpandConstant('{tmp}\scripts')
-        ]),
-        '', SW_HIDE, ewWaitUntilTerminated, ResultCode
-      ) then
+      // Распаковка языковых файлов в папку игры
+      PatcherPath := ExpandConstant('{tmp}\DeltaPatcherCLI.exe');
+      if FileExists(LangZipPath) then
       begin
-        if ResultCode <> 0 then
-          MsgBox('Ошибка применения патча: ' + IntToStr(ResultCode), mbError, MB_OK);
+        ProgressPage.SetText('Распаковка языковых файлов...', '');
+        Unzip(LangZipPath, GamePath);
       end
       else
-        MsgBox('Не удалось запустить патчер', mbError, MB_OK);
-    end
-    else
-      MsgBox('Файл патчера не найден', mbError, MB_OK);
-  except
-    MsgBox('Ошибка при установке: ' + GetExceptionMessage, mbError, MB_OK);
+        RaiseException('Файл lang.zip не найден');
+
+      // Распаковка скриптов во временную папку
+      if FileExists(ScriptsZipPath) then
+      begin
+        ProgressPage.SetText('Распаковка скриптов...', '');
+        Unzip(ScriptsZipPath, ExpandConstant('{tmp}\scripts'));
+      end
+      else
+        RaiseException('Файл scripts.zip не найден');
+
+      // Применение патча
+      if FileExists(PatcherPath) then
+      begin
+        ProgressPage.SetText('Применение патча...', 'Пожалуйста, подождите');
+        if Exec(
+          PatcherPath,
+          Format('--game "%s" --scripts "%s"', [
+            GamePath,
+            ExpandConstant('{tmp}\scripts')
+          ]),
+          '', SW_HIDE, ewWaitUntilTerminated, ResultCode
+        ) then
+        begin
+          if ResultCode <> 0 then
+            MsgBox('Ошибка применения патча: ' + IntToStr(ResultCode), mbError, MB_OK);
+        end
+        else
+          MsgBox('Не удалось запустить патчер', mbError, MB_OK);
+      end
+      else
+        MsgBox('Файл патчера не найден', mbError, MB_OK);
+    except
+      MsgBox('Ошибка при установке: ' + GetExceptionMessage, mbError, MB_OK);
+    end;
+  finally
+    // Гарантированное скрытие прогресс-страницы
+    ProgressPage.Hide;
   end;
 end;
 
