@@ -457,3 +457,4 @@ Scripts/
 DPCLIBuild/
 Output/
 DeltarunePatcherCLI.zip
+/DeltaPatcherCLI/DeltaPatcher/Properties/launchSettings.json
