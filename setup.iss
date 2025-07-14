@@ -151,7 +151,7 @@ begin
 
     ProgressPage.SetText('Применение патча...', '');
     PatcherPath := ExpandConstant('{tmp}\DeltaPatcherCLI.exe');
-    if Exec(PatcherPath, Format('--game "%s" --scripts "%s"', [GamePath, ExpandConstant('{tmp}\scripts')]), '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+    if Exec(PatcherPath, Format('--game "%s" --scripts "%s"', [GamePath, ExpandConstant('{tmp}\scripts')]), '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
     begin
       if ResultCode <> 0 then
         MsgBox('Ошибка применения патча: ' + IntToStr(ResultCode), mbError, MB_OK);
