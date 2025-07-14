@@ -166,15 +166,15 @@ class Program
 
             // аргументы
             var options = ScriptOptions.Default
-                                .AddImports("UndertaleModLib", "UndertaleModLib.Models", "UndertaleModLib.Decompiler",
-                                            "UndertaleModLib.Scripting", "UndertaleModLib.Compiler",
-                                            "System", "System.IO", "System.Collections.Generic",
-                                            "System.Text.RegularExpressions")
-                                .AddReferences(typeof(UndertaleObject).GetTypeInfo().Assembly,
-                                                typeof(Program).GetTypeInfo().Assembly,
-                                                typeof(System.Text.RegularExpressions.Regex).GetTypeInfo().Assembly,
-                                                typeof(ImageMagick.MagickImage).GetTypeInfo().Assembly,
-                                                typeof(Underanalyzer.Decompiler.DecompileContext).Assembly);
+                          .AddImports("UndertaleModLib", "UndertaleModLib.Models", "UndertaleModLib.Decompiler",
+                                      "UndertaleModLib.Scripting", "UndertaleModLib.Compiler",
+                                      "System", "System.IO", "System.Collections.Generic",
+                                      "System.Text.RegularExpressions")
+                          .AddReferences(typeof(UndertaleObject).GetTypeInfo().Assembly,
+                                         typeof(Program).GetTypeInfo().Assembly,
+                                         typeof(System.Text.RegularExpressions.Regex).GetTypeInfo().Assembly,
+                                         typeof(ImageMagick.MagickImage).GetTypeInfo().Assembly,
+                                         typeof(Underanalyzer.Decompiler.DecompileContext).Assembly);
 
 
             await CSharpScript.RunAsync(script, options, globals: new ScriptGlobals { Data = data });
