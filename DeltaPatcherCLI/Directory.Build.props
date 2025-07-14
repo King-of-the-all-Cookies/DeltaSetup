@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <!-- UndertaleModLib: prevent NuGet package and "UndertaleModLib.xml" file generation -->
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <!-- Underanalyzer: include PDB inside executable -->
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+</Project>

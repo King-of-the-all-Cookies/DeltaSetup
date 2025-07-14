@@ -10,6 +10,12 @@
 		<PublishSingleFile>true</PublishSingleFile>
 		<PublishTrimmed>true</PublishTrimmed>
 		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+		<!-- PDB внутри .exe -->
+		<DebugType>embedded</DebugType>
+		<!-- Системные ресурсы (текст ошибок) только для русского языка -->
+		<NeutralLanguage>ru</NeutralLanguage>
+		<ResourceLanguages>ru</ResourceLanguages>
+		<SatelliteResourceLanguages>ru</SatelliteResourceLanguages>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -18,9 +24,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\UndertaleModTool\Underanalyzer\Underanalyzer\Underanalyzer.csproj" />
-	  <ProjectReference Include="..\UndertaleModTool\UndertaleModLib\UndertaleModLib.csproj" />
+		<ProjectReference Include="..\UndertaleModTool\Underanalyzer\Underanalyzer\Underanalyzer.csproj" />
+		<ProjectReference Include="..\UndertaleModTool\UndertaleModLib\UndertaleModLib.csproj" />
 	</ItemGroup>
+
+	<!-- UndertaleModLib почему-то игнорирует `<GenerateDocumentationFile>false</GenerateDocumentationFile>` -->
+	<!-- TODO: никак не сделать чтобы заработало -->
+	<Target Name="DeleteXML" AfterTargets="AfterPublish">
+		<Message Text="$(PublishDir)UndertaleModLib.xml" Importance="high" />
+		<Exec Command="del /F /Q $(PublishDir)UndertaleModLib.xml" IgnoreExitCode="true" />
+	</Target>
 
 	<!-- Оптимизация размера -->
 	<PropertyGroup>
