@@ -1,0 +1,11 @@
+[13.07.2025 22:24:20] ERROR:
+Microsoft.CodeAnalysis.Scripting.CompilationErrorException: (9,43): error CS0103: Имя "FilePath" не существует в текущем контексте.
+   at Microsoft.CodeAnalysis.Scripting.ScriptBuilder.ThrowIfAnyCompilationErrors(DiagnosticBag diagnostics, DiagnosticFormatter formatter)
+   at Microsoft.CodeAnalysis.Scripting.ScriptBuilder.CreateExecutor[T](ScriptCompiler compiler, Compilation compilation, Boolean emitDebugInformation, CancellationToken cancellationToken)
+   at Microsoft.CodeAnalysis.Scripting.Script`1.GetExecutor(CancellationToken cancellationToken)
+   at Microsoft.CodeAnalysis.Scripting.Script`1.RunAsync(Object globals, Func`2 catchException, CancellationToken cancellationToken)
+   at Microsoft.CodeAnalysis.Scripting.Script`1.RunAsync(Object globals, CancellationToken cancellationToken)
+   at Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.RunAsync[T](String code, ScriptOptions options, Object globals, Type globalsType, CancellationToken cancellationToken)
+   at Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript.RunAsync(String code, ScriptOptions options, Object globals, Type globalsType, CancellationToken cancellationToken)
+   at Program.ApplyChapterPatch(String gamePath, String scriptsPath, String chapter, String dataWin)
+   at Program.Main(String[] args)
