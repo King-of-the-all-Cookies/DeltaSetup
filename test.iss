@@ -29,7 +29,7 @@ procedure InitializeWizard;
 begin
   GamePathPage := CreateInputDirPage(
     wpWelcome,
-    'Выберите папку с игрой DELTARUNE',
+    'Выберите папку DELTARUNE',
     'Где установлена игра?',
     'Выберите папку, содержащую DELTARUNE.exe и папки chapter1_windows, chapter2_windows и т.д.',
     False, ''
