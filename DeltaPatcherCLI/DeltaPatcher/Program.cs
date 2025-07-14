@@ -61,7 +61,6 @@ class Program
                             .AddReferences(typeof(UndertaleObject).GetTypeInfo().Assembly,
                                            typeof(Program).GetTypeInfo().Assembly,
                                            typeof(System.Text.RegularExpressions.Regex).GetTypeInfo().Assembly,
-                                           typeof(ImageMagick.MagickImage).GetTypeInfo().Assembly,
                                            typeof(Underanalyzer.Decompiler.DecompileContext).Assembly);
 
             // применяем патч

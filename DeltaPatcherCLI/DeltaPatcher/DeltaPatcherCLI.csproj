@@ -10,7 +10,7 @@
 		<PublishSingleFile>true</PublishSingleFile>
 		<PublishTrimmed>true</PublishTrimmed>
 		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+		<IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
 		<!-- PDB внутри .exe -->
 		<DebugType>embedded</DebugType>
 		<!-- Системные ресурсы (текст ошибок) только для русского языка -->
@@ -21,17 +21,13 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.8.0" />
-    <TrimmerRootAssembly Include="Microsoft.CodeAnalysis.CSharp.Scripting" />
-    <TrimmerRootAssembly Include="Magick.NET-Q8-AnyCPU" />
-    <TrimmerRootAssembly Include="System.Text.Json" />
-    <TrimmerRootAssembly Include="Microsoft.CSharp" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\UndertaleModTool\Underanalyzer\Underanalyzer\Underanalyzer.csproj" />
 		<ProjectReference Include="..\UndertaleModTool\UndertaleModLib\UndertaleModLib.csproj" />
-    <TrimmerRootAssembly Include="Underanalyzer" />
-    <TrimmerRootAssembly Include="UndertaleModLib" />
+		<TrimmerRootAssembly Include="Underanalyzer" />
+		<TrimmerRootAssembly Include="UndertaleModLib" />
 	</ItemGroup>
 
 	<!-- UndertaleModLib почему-то игнорирует `<GenerateDocumentationFile>false</GenerateDocumentationFile>` -->
@@ -43,7 +39,7 @@
 
 	<!-- Оптимизация размера -->
 	<PropertyGroup>
-		<TrimMode>copy</TrimMode>
+		<TrimMode>copyused</TrimMode>
 		<JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
 	</PropertyGroup>
 </Project>
