@@ -26,45 +26,75 @@ Source: "DeltarunePatcherCLI.zip"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
 [Code]
 var
-  InfoPage: TOutputMsgWizardPage;
+  WelcomePage: TWizardPage;
   GamePathPage: TInputDirWizardPage;
   ProgressPage: TOutputProgressWizardPage;
 
 procedure InitializeWizard;
 begin
-  // Кастомизация приветственной страницы
-  WizardForm.WelcomeLabel1.Caption := 'Добро пожаловать в мастер установки русификатора DELTARUNE';
-  WizardForm.WelcomeLabel2.Caption := 'Этот мастер установит русификатор для игры DELTARUNE, подготовленный командой LazyDesman.';
+  // Костыль: создаем дублированную приветственную страницу
+  WelcomePage := CreateCustomPage(wpWelcome, 
+    'Добро пожаловать в мастер установки русификатора DELTARUNE', 
+    'Этот мастер установит русификатор для игры DELTARUNE, подготовленный командой LazyDesman.');
 
-  // Создание информационной страницы
-  InfoPage := CreateOutputMsgPage(
-    wpWelcome,
-    'Описание установки',
-    'Что будет установлено?',
-    'Установка русификатора включает в себя:' + #13#10 +
-    ' - Полный перевод Главы 1' + #13#10 +
-    ' - Полный перевод Главы 2' + #13#10 +
-    ' - Полный перевод Главы 3 (если установлена)' + #13#10#13#10 +
-    'Перевод будет применён поверх вашей текущей установки игры.' + #13#10 +
-    'Все оригинальные файлы игры останутся нетронутыми.'
-  );
+  // Создаем элементы для дублированной страницы
+  with TNewStaticText.Create(WelcomePage) do
+  begin
+    Parent := WelcomePage.Surface;
+    Caption := 'Внимание: Убедитесь, что игра DELTARUNE установлена на вашем компьютере.';
+    Left := ScaleX(0);
+    Top := ScaleY(60);
+    Width := WelcomePage.SurfaceWidth;
+    Height := ScaleY(20);
+  end;
+
+  with TNewStaticText.Create(WelcomePage) do
+  begin
+    Parent := WelcomePage.Surface;
+    Caption := 'Этот установщик выполнит следующие действия:';
+    Left := ScaleX(0);
+    Top := ScaleY(100);
+    Width := WelcomePage.SurfaceWidth;
+    Height := ScaleY(20);
+  end;
+
+  with TNewStaticText.Create(WelcomePage) do
+  begin
+    Parent := WelcomePage.Surface;
+    Caption := '1. Установит DelTranslate';
+    Left := ScaleX(20);
+    Top := ScaleY(130);
+    Width := WelcomePage.SurfaceWidth;
+    Height := ScaleY(20);
+  end;
+
+  with TNewStaticText.Create(WelcomePage) do
+  begin
+    Parent := WelcomePage.Surface;
+    Caption := '2. Установит перевод для 1, 2 и 3 главы';
+    Left := ScaleX(20);
+    Top := ScaleY(150);
+    Width := WelcomePage.SurfaceWidth;
+    Height := ScaleY(20);
+  end;
 
   // Создание страницы выбора пути
   GamePathPage := CreateInputDirPage(
-    InfoPage.ID,
+    WelcomePage.ID,
     'Выберите папку DELTARUNE',
     'Где установлена игра?',
-    'Выберите папку, содержащую DELTARUNE.exe и папки chapter1_windows, chapter2_windows и т.д.'#13#10 +
-    'Обычно это выглядит так: "C:\Program Files (x86)\DELTARUNE"',
+    'Выберите папку, содержащую DELTARUNE.exe и папки chapter1_windows, chapter2_windows и т.д.',
     False, ''
   );
   GamePathPage.Add('');
 
-  // Кастомизация страницы завершения
-  WizardForm.FinishedHeadingLabel.Caption := 'Завершение установки русификатора DELTARUNE';
-
   // Создание страницы прогресса
   ProgressPage := CreateOutputProgressPage('Выполнение установки', 'Пожалуйста, подождите, пока выполняется установка...');
+
+  // Изменение текста на странице завершения
+  WizardForm.FinishedHeadingLabel.Caption := 'Завершение установки русификатора DELTARUNE';
+  WizardForm.FinishedLabel.Caption := 'Русификатор DELTARUNE был успешно установлен поверх вашей копии игры.' + #13#10#13#10 +
+    'Нажмите "Завершить", чтобы выйти из программы установки.';
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
