@@ -6,11 +6,14 @@ using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using System.Reflection;
 using UndertaleModLib;
+using System.Runtime;
 
 namespace DeltaPatcherCLI;
 
 class Program
 {
+    private static ScriptOptions scriptOptions;
+
     static async Task Main(string[] args)
     {
         try
@@ -49,6 +52,17 @@ class Program
                 Console.WriteLine("Патч не может быть применён из-за ошибок в путях");
                 Environment.Exit(1);
             }
+
+            scriptOptions = ScriptOptions.Default
+                            .AddImports("UndertaleModLib", "UndertaleModLib.Models", "UndertaleModLib.Decompiler",
+                                        "UndertaleModLib.Scripting", "UndertaleModLib.Compiler",
+                                        "System", "System.IO", "System.Collections.Generic",
+                                        "System.Text.RegularExpressions")
+                            .AddReferences(typeof(UndertaleObject).GetTypeInfo().Assembly,
+                                           typeof(Program).GetTypeInfo().Assembly,
+                                           typeof(System.Text.RegularExpressions.Regex).GetTypeInfo().Assembly,
+                                           typeof(ImageMagick.MagickImage).GetTypeInfo().Assembly,
+                                           typeof(Underanalyzer.Decompiler.DecompileContext).Assembly);
 
             // применяем патч
             await ApplyChapterPatch(gamePath, scriptsPath, "Menu", "data.win");
@@ -166,31 +180,27 @@ class Program
             Console.WriteLine("- Применение скрипта...");
             var script = File.ReadAllText(scriptPath);
 
-            // аргументы
-            var options = ScriptOptions.Default
-                          .AddImports("UndertaleModLib", "UndertaleModLib.Models", "UndertaleModLib.Decompiler",
-                                      "UndertaleModLib.Scripting", "UndertaleModLib.Compiler",
-                                      "System", "System.IO", "System.Collections.Generic",
-                                      "System.Text.RegularExpressions")
-                          .AddReferences(typeof(UndertaleObject).GetTypeInfo().Assembly,
-                                         typeof(Program).GetTypeInfo().Assembly,
-                                         typeof(System.Text.RegularExpressions.Regex).GetTypeInfo().Assembly,
-                                         typeof(ImageMagick.MagickImage).GetTypeInfo().Assembly,
-                                         typeof(Underanalyzer.Decompiler.DecompileContext).Assembly);
-
             ScriptGlobals scriptGlobals = new()
             {
                 Data = data,
                 FilePath = dataWinPath,
                 ScriptPath = scriptPath
             };
-            await CSharpScript.RunAsync(script, options, globals: scriptGlobals);
+            await CSharpScript.RunAsync(script, scriptOptions, globals: scriptGlobals);
 
             Console.WriteLine("- Сохранение изменений...");
             using (var fileStream = File.Create(dataWinPath))
             {
                 UndertaleIO.Write(fileStream, data);
             }
+
+            // Очистка остаточных данных в памяти
+            scriptGlobals.Data = null;
+            data.Dispose();
+
+            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
 
             Console.WriteLine($"- Глава {chapter} успешно пропатчена!");
         }
