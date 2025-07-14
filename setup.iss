@@ -26,23 +26,44 @@ Source: "DeltarunePatcherCLI.zip"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
 [Code]
 var
+  InfoPage: TOutputMsgWizardPage;
   GamePathPage: TInputDirWizardPage;
   ProgressPage: TOutputProgressWizardPage;
 
 procedure InitializeWizard;
 begin
+  // Кастомизация приветственной страницы
   WizardForm.WelcomeLabel1.Caption := 'Добро пожаловать в мастер установки русификатора DELTARUNE';
   WizardForm.WelcomeLabel2.Caption := 'Этот мастер установит русификатор для игры DELTARUNE, подготовленный командой LazyDesman.';
 
-  GamePathPage := CreateInputDirPage(
+  // Создание информационной страницы
+  InfoPage := CreateOutputMsgPage(
     wpWelcome,
+    'Описание установки',
+    'Что будет установлено?',
+    'Установка русификатора включает в себя:' + #13#10 +
+    ' - Полный перевод Главы 1' + #13#10 +
+    ' - Полный перевод Главы 2' + #13#10 +
+    ' - Полный перевод Главы 3 (если установлена)' + #13#10#13#10 +
+    'Перевод будет применён поверх вашей текущей установки игры.' + #13#10 +
+    'Все оригинальные файлы игры останутся нетронутыми.'
+  );
+
+  // Создание страницы выбора пути
+  GamePathPage := CreateInputDirPage(
+    InfoPage.ID,
     'Выберите папку DELTARUNE',
     'Где установлена игра?',
-    'Выберите папку, содержащую DELTARUNE.exe и папки chapter1_windows, chapter2_windows и т.д.',
+    'Выберите папку, содержащую DELTARUNE.exe и папки chapter1_windows, chapter2_windows и т.д.'#13#10 +
+    'Обычно это выглядит так: "C:\Program Files (x86)\DELTARUNE"',
     False, ''
   );
   GamePathPage.Add('');
 
+  // Кастомизация страницы завершения
+  WizardForm.FinishedHeadingLabel.Caption := 'Завершение установки русификатора DELTARUNE';
+
+  // Создание страницы прогресса
   ProgressPage := CreateOutputProgressPage('Выполнение установки', 'Пожалуйста, подождите, пока выполняется установка...');
 end;
 
@@ -141,10 +162,8 @@ begin
   end;
 end;
 
-
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then
     DownloadAndExtractFiles;
 end;
-
