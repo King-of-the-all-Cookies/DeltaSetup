@@ -18,6 +18,9 @@ DisableDirPage=yes
 WizardSmallImageFile=logo.bmp
 WizardImageFile=banner.bmp
 
+[Languages]
+Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
+
 [Files]
 Source: "DeltarunePatcherCLI.zip"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
