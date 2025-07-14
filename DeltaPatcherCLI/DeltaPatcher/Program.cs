@@ -186,6 +186,18 @@ class Program
                 FilePath = dataWinPath,
                 ScriptPath = scriptPath
             };
+
+            // Говорим компилятору (при trimming) что все методы (включая getter'ы) используются
+            object prop = scriptGlobals.Data;
+            prop = scriptGlobals.FilePath;
+            prop = scriptGlobals.ScriptPath;
+            scriptGlobals.ScriptMessage(null, true);
+            scriptGlobals.SyncBinding(null, true);
+            scriptGlobals.SetProgressBar(null, null, -1, -1);
+            scriptGlobals.UpdateProgressValue(-1);
+            scriptGlobals.IncrementProgress();
+            scriptGlobals.GetProgress();
+
             await CSharpScript.RunAsync(script, scriptOptions, globals: scriptGlobals);
 
             Console.WriteLine("- Сохранение изменений...");
@@ -232,9 +244,10 @@ public class ScriptGlobals
         // There is no GUI with WPF bindings
     }
 
-    public void ScriptMessage(string message)
+    public void ScriptMessage(string message, bool dummy = false)
     {
-        Console.WriteLine(message);
+        if (!dummy)
+            Console.WriteLine(message);
     }
 
     // TODO?
