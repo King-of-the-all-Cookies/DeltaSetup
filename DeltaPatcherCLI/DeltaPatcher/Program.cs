@@ -7,6 +7,8 @@ using Microsoft.CodeAnalysis.Scripting;
 using System.Reflection;
 using UndertaleModLib;
 
+namespace DeltaPatcherCLI;
+
 class Program
 {
     static async Task Main(string[] args)
@@ -176,8 +178,13 @@ class Program
                                          typeof(ImageMagick.MagickImage).GetTypeInfo().Assembly,
                                          typeof(Underanalyzer.Decompiler.DecompileContext).Assembly);
 
-
-            await CSharpScript.RunAsync(script, options, globals: new ScriptGlobals { Data = data });
+            ScriptGlobals scriptGlobals = new()
+            {
+                Data = data,
+                FilePath = dataWinPath,
+                ScriptPath = scriptPath
+            };
+            await CSharpScript.RunAsync(script, options, globals: scriptGlobals);
 
             Console.WriteLine("- Сохранение изменений...");
             using (var fileStream = File.Create(dataWinPath))
@@ -207,5 +214,22 @@ class Program
 public class ScriptGlobals
 {
     public UndertaleData Data { get; set; }
+    public string FilePath { get; set; }
+    public string ScriptPath { get; set; }
 
+    public void SyncBinding(string resourceType, bool enable)
+    {
+        // There is no GUI with WPF bindings
+    }
+
+    public void ScriptMessage(string message)
+    {
+        Console.WriteLine(message);
+    }
+
+    // TODO?
+    public void SetProgressBar(string message, string status, double currentValue, double maxValue) { }
+    public void UpdateProgressValue(double currentValue) { }
+    public void IncrementProgress() { }
+    public int GetProgress() => -1;
 }
