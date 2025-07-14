@@ -1,0 +1,21 @@
+{
+    "sounds": [
+        "AUDIO_INTRONOISE",
+        "ch2_credits",
+        "snd_boxing_fight",
+        "snd_boxing_fight_bc",
+        "snd_boxing_round1",
+        "snd_boxing_round1_bc",
+        "snd_boxing_round2",
+        "snd_boxing_round2_bc",
+        "snd_boxing_round3",
+        "snd_boxing_round3_bc",
+        "snd_tm_quiz_a",
+        "snd_tm_quiz_b",
+        "snd_tm_quiz_c",
+        "snd_tm_quiz_d",
+        "spamton_battle",
+        "spamton_meeting",
+        "spamton_neo_mix_ex_wip"
+    ]
+}

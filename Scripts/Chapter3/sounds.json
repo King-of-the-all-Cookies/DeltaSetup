@@ -1,0 +1,18 @@
+{
+    "sounds": [
+        "tennaIntroF1_compressed_28",
+        "tennaIntroJPf1_compressed_28",
+        "AUDIO_INTRONOISE",
+        "ch2_credits",
+        "snd_joker_laugh0",
+        "snd_speak_and_spell_maru",
+        "snd_its_tv_time",
+        "snd_smashreveal"
+    ],
+    "other": [
+        "tennaIntroF1_compressed_28",
+        "snd_speak_and_spell_%Буква%",
+        "snd_speak_and_spell_2",
+        "snd_speak_and_spell_Exclamation"
+    ]
+}

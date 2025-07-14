@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36301.6 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeltaPatcherCLI", "DeltaPatcher\DeltaPatcherCLI.csproj", "{58B50228-A4B9-442D-BBB9-1EB52B9A0E24}"
+	ProjectSection(ProjectDependencies) = postProject
+		{69A5B990-A618-48D4-D9D3-5A9F093BDCEE} = {69A5B990-A618-48D4-D9D3-5A9F093BDCEE}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UndertaleModLib", "UndertaleModTool\UndertaleModLib\UndertaleModLib.csproj", "{3E1FBADF-4C64-D01C-7F2D-01009E3B0CBB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Underanalyzer", "UndertaleModTool\Underanalyzer\Underanalyzer\Underanalyzer.csproj", "{69A5B990-A618-48D4-D9D3-5A9F093BDCEE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{58B50228-A4B9-442D-BBB9-1EB52B9A0E24}.Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{58B50228-A4B9-442D-BBB9-1EB52B9A0E24}.Debug|Any CPU.Build.0 = Release|Any CPU
+		{58B50228-A4B9-442D-BBB9-1EB52B9A0E24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58B50228-A4B9-442D-BBB9-1EB52B9A0E24}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E1FBADF-4C64-D01C-7F2D-01009E3B0CBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E1FBADF-4C64-D01C-7F2D-01009E3B0CBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E1FBADF-4C64-D01C-7F2D-01009E3B0CBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E1FBADF-4C64-D01C-7F2D-01009E3B0CBB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{69A5B990-A618-48D4-D9D3-5A9F093BDCEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{69A5B990-A618-48D4-D9D3-5A9F093BDCEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{69A5B990-A618-48D4-D9D3-5A9F093BDCEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{69A5B990-A618-48D4-D9D3-5A9F093BDCEE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6BBCCE0B-0824-49CA-BDFA-243EF4F51B55}
+	EndGlobalSection
+EndGlobal
