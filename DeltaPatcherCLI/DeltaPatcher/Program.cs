@@ -13,13 +13,14 @@ namespace DeltaPatcherCLI;
 class Program
 {
     private static ScriptOptions scriptOptions;
+    private static readonly string Version = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
 
     static async Task Main(string[] args)
     {
         try
         {
             Console.WriteLine("DELTARUNE Russian Patcher CLI");
-            Console.WriteLine("Version 1.1");
+            Console.WriteLine($"Version {Version}");
             Console.WriteLine("Developed by LazyDesman");
             Console.WriteLine("-----------------------------------");
 
