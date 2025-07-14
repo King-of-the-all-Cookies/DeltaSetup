@@ -13,8 +13,6 @@ class Program
     {
         try
         {
-            AppContext.SetSwitch("System.Text.Json.EnableUnsafeBinaryFormatterSerialization", true);
-
             Console.WriteLine("DELTARUNE Russian Patcher CLI");
             Console.WriteLine("Version 1.1");
             Console.WriteLine("Developed by LazyDesman");
