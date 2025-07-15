@@ -31,7 +31,7 @@ var
   GamePathPage: TInputDirWizardPage;
   ProgressPage: TOutputProgressWizardPage;
 
-// ПОИСК ДЕЛЬТЫ
+// Поиск DELTARUNE.exe
 function FindGameExe(): String;
 var
   i, j: Integer;
@@ -43,7 +43,6 @@ begin
   Paths[2] := '\DELTARUNE\DELTARUNE.exe';
   Paths[3] := '\Program Files\DELTARUNE\DELTARUNE.exe';
   Result := '';
-
   for i := Ord('C') to Ord('Z') do
   begin
     Drive := Chr(i) + ':';
@@ -59,14 +58,11 @@ begin
   end;
 end;
 
-
 procedure InitializeWizard;
 begin
-  // Кастомизация стандартной приветственной страницы
   WizardForm.WelcomeLabel1.Caption := 'Добро пожаловать в мастер установки русификатора DELTARUNE';
   WizardForm.WelcomeLabel2.Caption := 'Этот мастер установит русификатор для игры DELTARUNE, подготовленный командой LazyDesman.';
 
-  // Создание информационной страницы после страницы приветствия
   InfoPage := CreateOutputMsgPage(
     wpWelcome,
     'Описание установки',
@@ -80,7 +76,6 @@ begin
     'Все оригинальные файлы игры останутся нетронутыми.'
   );
 
-  // Создание страницы выбора пути установки
   GamePathPage := CreateInputDirPage(
     InfoPage.ID,
     'Выберите папку DELTARUNE',
@@ -90,17 +85,13 @@ begin
     False, ''
   );
   GamePathPage.Add('');
-  // Установка примера пути по умолчанию (позволяет скопировать текст из поля)
   GamePathPage.Values[0] := 'C:\Program Files (x86)\Steam\steamapps\common\DELTARUNE';
 
-  // Кастомизация страницы завершения
   WizardForm.FinishedHeadingLabel.Caption := 'Завершение установки русификатора DELTARUNE';
 
-  // Создание страницы прогресса
-  ProgressPage := CreateOutputProgressPage('Выполнение установки', 'Пожалуйста, подождите, пока выполняется установка...');
+  ProgressPage := CreateOutputProgressPage('Выполнение установки', 'Пожалуйста, подождите...');
 end;
 
-// Обработка нажатия кнопки "Далее"
 function NextButtonClick(CurPageID: Integer): Boolean;
 var
   FoundExe: String;
@@ -108,21 +99,14 @@ begin
   Result := True;
   if CurPageID = InfoPage.ID then
   begin
-    // При переходе с информационной страницы сканируем диски
     FoundExe := FindGameExe();
     if FoundExe <> '' then
-    begin
-      // Просто вставляем путь, без вопросов
-      GamePathPage.Values[0] := ExtractFilePath(FoundExe);
-    end
+      GamePathPage.Values[0] := ExtractFilePath(FoundExe)
     else
-    begin
       MsgBox('DELTARUNE.exe не найден в стандартных папках. Пожалуйста, укажите путь вручную.', mbInformation, MB_OK);
-    end;
   end
   else if CurPageID = GamePathPage.ID then
   begin
-    // Проверка наличия DELTARUNE.exe в указанной папке
     if not FileExists(AddBackslash(GamePathPage.Values[0]) + 'DELTARUNE.exe') then
     begin
       MsgBox('Не найден DELTARUNE.exe в указанной папке!', mbError, MB_OK);
@@ -131,7 +115,7 @@ begin
   end;
 end;
 
-
+// --- ПРОГРЕСС загрузки через IDP ---
 procedure ProgressCallback(URL, FileName: String; FileSize, BytesDownloaded, ElapsedTime, EstimatedRemainingTime: Integer);
 var
   SpeedKB, RemainingSec: Integer;
@@ -152,6 +136,7 @@ begin
   );
 end;
 
+// Скачивание с двух зеркал
 function DownloadWithMirror(URL1, URL2, Dest: String): Boolean;
 begin
   Result := idpDownloadFile(URL1, Dest);
@@ -160,7 +145,8 @@ begin
 end;
 
 
-procedure Unzip(ZipFile, TargetDir: string);
+// Распаковка с эмуляцией прогресса
+procedure UnzipWithFakeProgress(ZipFile, TargetDir: string);
 var
   Shell, ZipFolder: Variant;
   i, TotalItems: Integer;
@@ -173,9 +159,14 @@ begin
 
   TotalItems := ZipFolder.Items.Count;
   for i := 0 to TotalItems - 1 do
+  begin
+    ProgressPage.SetProgress(i, TotalItems);
+    ProgressPage.SetText('Распаковка: ' + ZipFolder.Items.Item(i).Name, '');
     Shell.NameSpace(TargetDir).CopyHere(ZipFolder.Items.Item(i), 4 + 16);
+    Sleep(300); // для имитации прогресса
+  end;
 
-  Sleep(500);
+  ProgressPage.SetProgress(TotalItems, TotalItems);
 end;
 
 procedure DownloadAndExtractFiles;
@@ -199,13 +190,13 @@ begin
       RaiseException('Ошибка загрузки scripts.zip');
 
     ProgressPage.SetText('Распаковка патчера...', '');
-    Unzip(PatcherZipPath, ExpandConstant('{tmp}'));
+    UnzipWithFakeProgress(PatcherZipPath, ExpandConstant('{tmp}'));
 
     ProgressPage.SetText('Распаковка языковых файлов...', '');
-    Unzip(LangZipPath, GamePath);
+    UnzipWithFakeProgress(LangZipPath, GamePath);
 
     ProgressPage.SetText('Распаковка скриптов...', '');
-    Unzip(ScriptsZipPath, ExpandConstant('{tmp}\scripts'));
+    UnzipWithFakeProgress(ScriptsZipPath, ExpandConstant('{tmp}\scripts'));
 
     ProgressPage.SetText('Применение патча...', '');
     PatcherPath := ExpandConstant('{tmp}\DeltaPatcherCLI.exe');
