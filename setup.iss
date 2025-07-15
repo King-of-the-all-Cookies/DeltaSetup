@@ -8,13 +8,14 @@ AppVersion=1.0
 AppPublisher=LazyDesman
 DefaultDirName={autopf}\DELTARUNE Russian Patch
 OutputBaseFilename=DeltaruneRussianPatcherSetup
-Compression=lzma2
+Compression=lzma2/ultra64
 SolidCompression=yes
 SetupIconFile=icon.ico
 WizardStyle=modern
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 DisableDirPage=yes
+DisableWelcomePage=no
 WizardSmallImageFile=logo.bmp
 WizardImageFile=banner.bmp
 
@@ -30,13 +31,42 @@ var
   GamePathPage: TInputDirWizardPage;
   ProgressPage: TOutputProgressWizardPage;
 
+// ПОИСК ДЕЛЬТЫ
+function FindGameExe(): String;
+var
+  i, j: Integer;
+  Drive, FullPath: String;
+  Paths: array[0..3] of String;
+begin
+  Paths[0] := '\Program Files (x86)\Steam\steamapps\common\DELTARUNE\DELTARUNE.exe';
+  Paths[1] := '\Program Files (x86)\DELTARUNE\DELTARUNE.exe';
+  Paths[2] := '\DELTARUNE\DELTARUNE.exe';
+  Paths[3] := '\Program Files\DELTARUNE\DELTARUNE.exe';
+  Result := '';
+
+  for i := Ord('C') to Ord('Z') do
+  begin
+    Drive := Chr(i) + ':';
+    for j := 0 to High(Paths) do
+    begin
+      FullPath := Drive + Paths[j];
+      if FileExists(FullPath) then
+      begin
+        Result := FullPath;
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+
 procedure InitializeWizard;
 begin
-  // Кастомизация приветственной страницы
+  // Кастомизация стандартной приветственной страницы
   WizardForm.WelcomeLabel1.Caption := 'Добро пожаловать в мастер установки русификатора DELTARUNE';
   WizardForm.WelcomeLabel2.Caption := 'Этот мастер установит русификатор для игры DELTARUNE, подготовленный командой LazyDesman.';
 
-  // Создание информационной страницы
+  // Создание информационной страницы после страницы приветствия
   InfoPage := CreateOutputMsgPage(
     wpWelcome,
     'Описание установки',
@@ -50,7 +80,7 @@ begin
     'Все оригинальные файлы игры останутся нетронутыми.'
   );
 
-  // Создание страницы выбора пути
+  // Создание страницы выбора пути установки
   GamePathPage := CreateInputDirPage(
     InfoPage.ID,
     'Выберите папку DELTARUNE',
@@ -60,20 +90,39 @@ begin
     False, ''
   );
   GamePathPage.Add('');
+  // Установка примера пути по умолчанию (позволяет скопировать текст из поля)
+  GamePathPage.Values[0] := 'C:\Program Files (x86)\Steam\steamapps\common\DELTARUNE';
 
   // Кастомизация страницы завершения
   WizardForm.FinishedHeadingLabel.Caption := 'Завершение установки русификатора DELTARUNE';
-
 
   // Создание страницы прогресса
   ProgressPage := CreateOutputProgressPage('Выполнение установки', 'Пожалуйста, подождите, пока выполняется установка...');
 end;
 
+// Обработка нажатия кнопки "Далее"
 function NextButtonClick(CurPageID: Integer): Boolean;
+var
+  FoundExe: String;
 begin
   Result := True;
-  if CurPageID = GamePathPage.ID then
+  if CurPageID = InfoPage.ID then
   begin
+    // При переходе с информационной страницы сканируем диски
+    FoundExe := FindGameExe();
+    if FoundExe <> '' then
+    begin
+      // Просто вставляем путь, без вопросов
+      GamePathPage.Values[0] := ExtractFilePath(FoundExe);
+    end
+    else
+    begin
+      MsgBox('DELTARUNE.exe не найден в стандартных папках. Пожалуйста, укажите путь вручную.', mbInformation, MB_OK);
+    end;
+  end
+  else if CurPageID = GamePathPage.ID then
+  begin
+    // Проверка наличия DELTARUNE.exe в указанной папке
     if not FileExists(AddBackslash(GamePathPage.Values[0]) + 'DELTARUNE.exe') then
     begin
       MsgBox('Не найден DELTARUNE.exe в указанной папке!', mbError, MB_OK);
@@ -81,6 +130,7 @@ begin
     end;
   end;
 end;
+
 
 procedure ProgressCallback(URL, FileName: String; FileSize, BytesDownloaded, ElapsedTime, EstimatedRemainingTime: Integer);
 var
@@ -101,6 +151,14 @@ begin
     'Скорость: ' + IntToStr(SpeedKB) + ' КБ/с | Осталось: ' + IntToStr(RemainingSec) + ' сек'
   );
 end;
+
+function DownloadWithMirror(URL1, URL2, Dest: String): Boolean;
+begin
+  Result := idpDownloadFile(URL1, Dest);
+  if not Result then
+    Result := idpDownloadFile(URL2, Dest);
+end;
+
 
 procedure Unzip(ZipFile, TargetDir: string);
 var
@@ -133,11 +191,11 @@ begin
   ProgressPage.Show;
   try
     ProgressPage.SetText('Загрузка языковых файлов...', '');
-    if not idpDownloadFile('https://filldor.ru/deltaRU/lang.zip', LangZipPath) then
+    if not DownloadWithMirror('https://github.com/Lazy-Desman/DeltaruneRus/raw/refs/heads/main/lang.zip', 'https://filldor.ru/deltaRU/lang.zip', LangZipPath) then
       RaiseException('Ошибка загрузки lang.zip');
 
     ProgressPage.SetText('Загрузка скриптов...', '');
-    if not idpDownloadFile('https://filldor.ru/deltaRU/scripts.zip', ScriptsZipPath) then
+    if not DownloadWithMirror('https://github.com/Lazy-Desman/DeltaruneRus/raw/refs/heads/main/scripts.zip', 'https://filldor.ru/deltaRU/scripts.zip', ScriptsZipPath) then
       RaiseException('Ошибка загрузки scripts.zip');
 
     ProgressPage.SetText('Распаковка патчера...', '');
