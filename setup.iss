@@ -15,6 +15,7 @@ WizardStyle=modern
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 DisableDirPage=yes
+DisableWelcomePage=no
 WizardSmallImageFile=logo.bmp
 WizardImageFile=banner.bmp
 
@@ -30,13 +31,42 @@ var
   GamePathPage: TInputDirWizardPage;
   ProgressPage: TOutputProgressWizardPage;
 
+// Функция поиска DELTARUNE.exe в возможных местах на дисках
+function FindGameExe(): String;
+var
+  i, j: Integer;
+  Drive, FullPath: String;
+  Paths: array[0..3] of String;
+begin
+  Paths[0] := '\Program Files (x86)\Steam\steamapps\common\DELTARUNE\DELTARUNE.exe';
+  Paths[1] := '\Program Files (x86)\DELTARUNE\DELTARUNE.exe';
+  Paths[2] := '\DELTARUNE\DELTARUNE.exe';
+  Paths[3] := '\Program Files\DELTARUNE\DELTARUNE.exe';
+  Result := '';
+
+  for i := Ord('C') to Ord('Z') do
+  begin
+    Drive := Chr(i) + ':';
+    for j := 0 to High(Paths) do
+    begin
+      FullPath := Drive + Paths[j];
+      if FileExists(FullPath) then
+      begin
+        Result := FullPath;
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+
 procedure InitializeWizard;
 begin
-  // Кастомизация приветственной страницы
+  // Кастомизация стандартной приветственной страницы
   WizardForm.WelcomeLabel1.Caption := 'Добро пожаловать в мастер установки русификатора DELTARUNE';
   WizardForm.WelcomeLabel2.Caption := 'Этот мастер установит русификатор для игры DELTARUNE, подготовленный командой LazyDesman.';
 
-  // Создание информационной страницы
+  // Создание информационной страницы после страницы приветствия
   InfoPage := CreateOutputMsgPage(
     wpWelcome,
     'Описание установки',
@@ -50,7 +80,7 @@ begin
     'Все оригинальные файлы игры останутся нетронутыми.'
   );
 
-  // Создание страницы выбора пути
+  // Создание страницы выбора пути установки
   GamePathPage := CreateInputDirPage(
     InfoPage.ID,
     'Выберите папку DELTARUNE',
@@ -60,20 +90,39 @@ begin
     False, ''
   );
   GamePathPage.Add('');
+  // Установка примера пути по умолчанию (позволяет скопировать текст из поля)
+  GamePathPage.Values[0] := 'C:\Program Files (x86)\Steam\steamapps\common\DELTARUNE';
 
   // Кастомизация страницы завершения
   WizardForm.FinishedHeadingLabel.Caption := 'Завершение установки русификатора DELTARUNE';
-
 
   // Создание страницы прогресса
   ProgressPage := CreateOutputProgressPage('Выполнение установки', 'Пожалуйста, подождите, пока выполняется установка...');
 end;
 
+// Обработка нажатия кнопки "Далее"
 function NextButtonClick(CurPageID: Integer): Boolean;
+var
+  FoundExe: String;
 begin
   Result := True;
-  if CurPageID = GamePathPage.ID then
+  if CurPageID = InfoPage.ID then
   begin
+    // При переходе с информационной страницы сканируем диски
+    FoundExe := FindGameExe();
+    if FoundExe <> '' then
+    begin
+      if MsgBox('DELTARUNE найден по пути:' + #13#10 + FoundExe + #13#10 +
+        'Хотите вставить этот путь?', mbConfirmation, MB_YESNO) = IDYES then
+      begin
+        // Заполняем поле ввода найденным путем
+        GamePathPage.Values[0] := ExtractFilePath(FoundExe);
+      end;
+    end;
+  end
+  else if CurPageID = GamePathPage.ID then
+  begin
+    // Проверка наличия DELTARUNE.exe в указанной папке
     if not FileExists(AddBackslash(GamePathPage.Values[0]) + 'DELTARUNE.exe') then
     begin
       MsgBox('Не найден DELTARUNE.exe в указанной папке!', mbError, MB_OK);
