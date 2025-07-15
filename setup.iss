@@ -4,7 +4,7 @@
 
 [Setup]
 AppName=Русификатор DELTARUNE
-AppVersion=1.0
+AppVersion=1.0.1
 AppPublisher=LazyDesman
 DefaultDirName={autopf}\DELTARUNE Russian Patch
 OutputBaseFilename=DeltaruneRussianPatcherSetup
@@ -163,7 +163,6 @@ begin
     ProgressPage.SetProgress(i, TotalItems);
     ProgressPage.SetText('Распаковка: ' + ZipFolder.Items.Item(i).Name, '');
     Shell.NameSpace(TargetDir).CopyHere(ZipFolder.Items.Item(i), 4 + 16);
-    Sleep(300); // для имитации прогресса
   end;
 
   ProgressPage.SetProgress(TotalItems, TotalItems);
