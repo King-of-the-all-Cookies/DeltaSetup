@@ -1,7 +1,3 @@
-#pragma include __INCLUDE__ + ";" + ReadReg(HKLM, "Software\Microsoft\Windows\CurrentVersion\Uninstall\Inno Setup 6_is1", "InstallLocation")
-#pragma include __INCLUDE__ + ";" + "C:\Program Files (x86)\Inno Download Plugin"
-#include <idp.iss>
-
 [Setup]
 AppName=Русификатор DELTARUNE
 AppVersion=1.1.0
@@ -26,6 +22,11 @@ Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
 Source: "DeltarunePatcherCLI.7z"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
 [Code]
+const
+  LangURL = 'https://github.com/Lazy-Desman/DeltaruneRus/raw/refs/heads/main/lang.7z';
+  LangURLMirror = 'https://filldor.ru/deltaRU/lang.7z';
+  ScriptsURL = 'https://github.com/Lazy-Desman/DeltaruneRus/raw/refs/heads/main/scripts.7z';
+  ScriptsURLMirror = 'https://filldor.ru/deltaRU/scripts.7z';
 var
   InfoPage: TOutputMsgWizardPage;
   GamePathPage: TInputDirWizardPage;
@@ -115,63 +116,40 @@ begin
   end;
 end;
 
-// --- ПРОГРЕСС загрузки через IDP ---
-procedure ProgressCallback(URL, FileName: String; FileSize, BytesDownloaded, ElapsedTime, EstimatedRemainingTime: Integer);
-var
-  SpeedKB, RemainingSec: Integer;
-begin
-  if FileSize > 0 then
-    ProgressPage.SetProgress(BytesDownloaded, FileSize);
-
-  if ElapsedTime > 0 then
-    SpeedKB := (BytesDownloaded div 1024) * 1000 div ElapsedTime
-  else
-    SpeedKB := 0;
-
-  RemainingSec := EstimatedRemainingTime div 1000;
-
-  ProgressPage.SetText(
-    'Загружено: ' + IntToStr(BytesDownloaded div 1024) + ' КБ из ' + IntToStr(FileSize div 1024) + ' КБ',
-    'Скорость: ' + IntToStr(SpeedKB) + ' КБ/с | Осталось: ' + IntToStr(RemainingSec) + ' сек'
-  );
-end;
-
-// Скачивание с двух зеркал
-function DownloadWithMirror(URL1, URL2, Dest: String): Boolean;
-begin
-  Result := idpDownloadFile(URL1, Dest);
-  if not Result then
-    Result := idpDownloadFile(URL2, Dest);
-end;
-
-
-// Распаковка с эмуляцией прогресса
-procedure UnzipWithFakeProgress(ZipFile, TargetDir: string);
-var
-  Shell, ZipFolder: Variant;
-  i, TotalItems: Integer;
-begin
-  Shell := CreateOleObject('Shell.Application');
-  ZipFolder := Shell.NameSpace(ZipFile);
-
-  if not DirExists(TargetDir) then
-    ForceDirectories(TargetDir);
-
-  TotalItems := ZipFolder.Items.Count;
-  for i := 0 to TotalItems - 1 do
-  begin
-    ProgressPage.SetProgress(i, TotalItems);
-    ProgressPage.SetText('Распаковка: ' + ZipFolder.Items.Item(i).Name, '');
-    Shell.NameSpace(TargetDir).CopyHere(ZipFolder.Items.Item(i), 4 + 16);
-  end;
-
-  ProgressPage.SetProgress(TotalItems, TotalItems);
-end;
-
-function OnExtractionProgress(const ArchiveName, FileName: String; const Progress, ProgressMax: Int64): Boolean;
+function OnProgress(const ObjectName, FileName: String; const Progress, ProgressMax: Int64): Boolean;
 begin
   ProgressPage.SetProgress(Progress, ProgressMax);
   Result := True;
+end;
+
+procedure DownloadToTempWithMirror(const TextHeader, MainURL, MirrorURL, FileName: String);
+var
+  FileSizeBytes: Integer;
+  FileSizeStr: String;
+  DownloadCallback: TOnDownloadProgress;
+begin
+  ProgressPage.SetText(TextHeader, '');
+  
+  try
+    FileSizeBytes := DownloadTemporaryFileSize(MainURL);
+  except
+    FileSizeBytes := DownloadTemporaryFileSize(MirrorURL);
+  end;
+  
+  if FileSizeBytes > 0 then
+  begin
+    DownloadCallback := @OnProgress;
+    FileSizeStr := Format('%.2d', [FileSizeBytes / 1024 / 1024]) + ' МБ';
+    ProgressPage.SetText(TextHeader, 'Размер файла: ' + FileSizeStr);
+  end
+  else
+    DownloadCallback := nil;
+  
+  try
+    DownloadTemporaryFile(MainURL, FileName, '', DownloadCallback);
+  except
+    DownloadTemporaryFile(MirrorURL, FileName, '', DownloadCallback);
+  end;
 end;
 
 procedure DownloadAndExtractFiles;
@@ -186,22 +164,23 @@ begin
 
   ProgressPage.Show;
   try
-    ProgressPage.SetText('Загрузка языковых файлов...', '');
-    if not DownloadWithMirror('https://github.com/Lazy-Desman/DeltaruneRus/raw/refs/heads/main/lang.7z', 'https://filldor.ru/deltaRU/lang.7z', LangZipPath) then
-      RaiseException('Ошибка загрузки lang.zip');
-
-    ProgressPage.SetText('Загрузка скриптов...', '');
-    if not DownloadWithMirror('https://github.com/Lazy-Desman/DeltaruneRus/raw/refs/heads/main/scripts.7z', 'https://filldor.ru/deltaRU/scripts.7z', ScriptsZipPath) then
-      RaiseException('Ошибка загрузки scripts.zip');
-
+    DownloadToTempWithMirror('Загрузка языковых файлов...', LangURL, LangURLMirror, 'lang.7z');
+    DownloadToTempWithMirror('Загрузка скриптов...', ScriptsURL, ScriptsURLMirror, 'scripts.7z');
+  except
+    MsgBox('В процессе скачивания файлов произошла ошибка: ' + GetExceptionMessage(), mbError, MB_OK);
+    ProgressPage.Hide;
+    exit;
+  end;
+  
+  try
     ProgressPage.SetText('Распаковка патчера...', '');
-    Extract7ZipArchive(PatcherZipPath, ExpandConstant('{tmp}'), True, @OnExtractionProgress);
+    Extract7ZipArchive(PatcherZipPath, ExpandConstant('{tmp}'), True, @OnProgress);
 
     ProgressPage.SetText('Распаковка языковых файлов...', '');
-    Extract7ZipArchive(LangZipPath, GamePath, True, @OnExtractionProgress);
+    Extract7ZipArchive(LangZipPath, GamePath, True, @OnProgress);
 
     ProgressPage.SetText('Распаковка скриптов...', '');
-    Extract7ZipArchive(ScriptsZipPath, ExpandConstant('{tmp}\scripts'), True, @OnExtractionProgress);
+    Extract7ZipArchive(ScriptsZipPath, ExpandConstant('{tmp}\scripts'), True, @OnProgress);
 
     ProgressPage.SetText('Применение патча...', '');
     PatcherPath := ExpandConstant('{tmp}\DeltaPatcherCLI.exe');
