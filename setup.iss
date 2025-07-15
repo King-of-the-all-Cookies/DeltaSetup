@@ -4,7 +4,7 @@
 
 [Setup]
 AppName=Русификатор DELTARUNE
-AppVersion=1.0.1
+AppVersion=1.1.0
 AppPublisher=LazyDesman
 DefaultDirName={autopf}\DELTARUNE Russian Patch
 OutputBaseFilename=DeltaruneRussianPatcherSetup
@@ -23,7 +23,7 @@ WizardImageFile=banner.bmp
 Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
 
 [Files]
-Source: "DeltarunePatcherCLI.zip"; DestDir: "{tmp}"; Flags: deleteafterinstall
+Source: "DeltarunePatcherCLI.7z"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
 [Code]
 var
@@ -168,34 +168,40 @@ begin
   ProgressPage.SetProgress(TotalItems, TotalItems);
 end;
 
+function OnExtractionProgress(const ArchiveName, FileName: String; const Progress, ProgressMax: Int64): Boolean;
+begin
+  ProgressPage.SetProgress(Progress, ProgressMax);
+  Result := True;
+end;
+
 procedure DownloadAndExtractFiles;
 var
   LangZipPath, ScriptsZipPath, PatcherZipPath, GamePath, PatcherPath: String;
   ResultCode: Integer;
 begin
-  LangZipPath := ExpandConstant('{tmp}\lang.zip');
-  ScriptsZipPath := ExpandConstant('{tmp}\scripts.zip');
-  PatcherZipPath := ExpandConstant('{tmp}\DeltarunePatcherCLI.zip');
+  LangZipPath := ExpandConstant('{tmp}\lang.7z');
+  ScriptsZipPath := ExpandConstant('{tmp}\scripts.7z');
+  PatcherZipPath := ExpandConstant('{tmp}\DeltarunePatcherCLI.7z');
   GamePath := GamePathPage.Values[0];
 
   ProgressPage.Show;
   try
     ProgressPage.SetText('Загрузка языковых файлов...', '');
-    if not DownloadWithMirror('https://github.com/Lazy-Desman/DeltaruneRus/raw/refs/heads/main/lang.zip', 'https://filldor.ru/deltaRU/lang.zip', LangZipPath) then
+    if not DownloadWithMirror('https://github.com/Lazy-Desman/DeltaruneRus/raw/refs/heads/main/lang.7z', 'https://filldor.ru/deltaRU/lang.7z', LangZipPath) then
       RaiseException('Ошибка загрузки lang.zip');
 
     ProgressPage.SetText('Загрузка скриптов...', '');
-    if not DownloadWithMirror('https://github.com/Lazy-Desman/DeltaruneRus/raw/refs/heads/main/scripts.zip', 'https://filldor.ru/deltaRU/scripts.zip', ScriptsZipPath) then
+    if not DownloadWithMirror('https://github.com/Lazy-Desman/DeltaruneRus/raw/refs/heads/main/scripts.7z', 'https://filldor.ru/deltaRU/scripts.7z', ScriptsZipPath) then
       RaiseException('Ошибка загрузки scripts.zip');
 
     ProgressPage.SetText('Распаковка патчера...', '');
-    UnzipWithFakeProgress(PatcherZipPath, ExpandConstant('{tmp}'));
+    Extract7ZipArchive(PatcherZipPath, ExpandConstant('{tmp}'), True, @OnExtractionProgress);
 
     ProgressPage.SetText('Распаковка языковых файлов...', '');
-    UnzipWithFakeProgress(LangZipPath, GamePath);
+    Extract7ZipArchive(LangZipPath, GamePath, True, @OnExtractionProgress);
 
     ProgressPage.SetText('Распаковка скриптов...', '');
-    UnzipWithFakeProgress(ScriptsZipPath, ExpandConstant('{tmp}\scripts'));
+    Extract7ZipArchive(ScriptsZipPath, ExpandConstant('{tmp}\scripts'), True, @OnExtractionProgress);
 
     ProgressPage.SetText('Применение патча...', '');
     PatcherPath := ExpandConstant('{tmp}\DeltaPatcherCLI.exe');
@@ -206,7 +212,8 @@ begin
     end
     else
       MsgBox('Не удалось запустить патчер', mbError, MB_OK);
-
+  except
+    MsgBox('В процессе установки произошла ошибка: ' + GetExceptionMessage(), mbError, MB_OK);
   finally
     ProgressPage.Hide;
   end;
