@@ -31,7 +31,7 @@ var
   GamePathPage: TInputDirWizardPage;
   ProgressPage: TOutputProgressWizardPage;
 
-// Функция поиска DELTARUNE.exe в возможных местах на дисках
+// ПОИСК ДЕЛЬТЫ
 function FindGameExe(): String;
 var
   i, j: Integer;
@@ -112,12 +112,12 @@ begin
     FoundExe := FindGameExe();
     if FoundExe <> '' then
     begin
-      if MsgBox('DELTARUNE найден по пути:' + #13#10 + FoundExe + #13#10 +
-        'Хотите вставить этот путь?', mbConfirmation, MB_YESNO) = IDYES then
-      begin
-        // Заполняем поле ввода найденным путем
-        GamePathPage.Values[0] := ExtractFilePath(FoundExe);
-      end;
+      // Просто вставляем путь, без вопросов
+      GamePathPage.Values[0] := ExtractFilePath(FoundExe);
+    end
+    else
+    begin
+      MsgBox('DELTARUNE.exe не найден в стандартных папках. Пожалуйста, укажите путь вручную.', mbInformation, MB_OK);
     end;
   end
   else if CurPageID = GamePathPage.ID then
@@ -130,6 +130,7 @@ begin
     end;
   end;
 end;
+
 
 procedure ProgressCallback(URL, FileName: String; FileSize, BytesDownloaded, ElapsedTime, EstimatedRemainingTime: Integer);
 var
