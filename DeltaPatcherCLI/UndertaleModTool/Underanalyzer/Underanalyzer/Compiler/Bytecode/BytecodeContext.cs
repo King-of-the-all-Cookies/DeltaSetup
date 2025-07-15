@@ -681,30 +681,26 @@ internal sealed class BytecodeContext : ISubCompileContext
     /// </summary>
     public bool IsFunctionDeclaredInCurrentScope(string name)
     {
-        // If currently generating a function declaration header (arguments, inheritance calls),
-        // use the outer scope for function resolution. Otherwise, use current scope.
-        FunctionScope scope = CurrentScope.GeneratingFunctionDeclHeader ? CurrentScope.Parent! : CurrentScope;
- 
         switch (CompileContext.ScriptKind)
         {
             case CompileScriptKind.GlobalScript:
             case CompileScriptKind.RoomCreationCode:
                 // Global scripts and room creation code have foresight of future function declarations in the script
-                return scope.IsFunctionDeclared(CompileContext.GameContext, name);
+                return CurrentScope.IsFunctionDeclared(CompileContext.GameContext, name);
 
             case CompileScriptKind.ObjectEvent:
                 // Object events only have foresight of future functions in certain versions
                 if (CompileContext.GameContext.UsingObjectFunctionForesight)
                 {
-                    return scope.IsFunctionDeclared(CompileContext.GameContext, name);
+                    return CurrentScope.IsFunctionDeclared(CompileContext.GameContext, name);
                 }
 
                 // No foresight; attempt to retrieve function entry
-                return scope.TryGetDeclaredFunction(CompileContext.GameContext, name, out _);
+                return CurrentScope.TryGetDeclaredFunction(CompileContext.GameContext, name, out _);
 
             default:
                 // No foresight; attempt to retrieve function entry
-                return scope.TryGetDeclaredFunction(CompileContext.GameContext, name, out _);
+                return CurrentScope.TryGetDeclaredFunction(CompileContext.GameContext, name, out _);
         }
     }
 

@@ -96,10 +96,4 @@ public class ShortCircuitNode(List<IExpressionNode> conditions, ShortCircuitType
         }
         return false;
     }
-
-    /// <inheritdoc/>
-    public IEnumerable<IBaseASTNode> EnumerateChildren()
-    {
-        return Conditions;
-    }
 }

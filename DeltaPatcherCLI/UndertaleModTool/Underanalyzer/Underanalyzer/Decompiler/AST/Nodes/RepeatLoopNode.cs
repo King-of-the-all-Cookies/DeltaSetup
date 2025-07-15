@@ -4,8 +4,6 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-using System.Collections.Generic;
-
 namespace Underanalyzer.Decompiler.AST;
 
 /// <summary>
@@ -80,12 +78,5 @@ public class RepeatLoopNode(IExpressionNode timesToRepeat, BlockNode body) : ISt
     public bool RequiresMultipleLines(ASTPrinter printer)
     {
         return true;
-    }
-
-    /// <inheritdoc/>
-    public IEnumerable<IBaseASTNode> EnumerateChildren()
-    {
-        yield return TimesToRepeat;
-        yield return Body;
     }
 }

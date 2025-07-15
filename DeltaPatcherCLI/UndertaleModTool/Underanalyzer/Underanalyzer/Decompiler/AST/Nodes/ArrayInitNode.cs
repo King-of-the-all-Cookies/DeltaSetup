@@ -91,10 +91,4 @@ public class ArrayInitNode(List<IExpressionNode> elements) : IExpressionNode, IM
         }
         return null;
     }
-
-    /// <inheritdoc/>
-    public IEnumerable<IBaseASTNode> EnumerateChildren()
-    {
-        return Elements;
-    }
 }

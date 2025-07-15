@@ -37,11 +37,8 @@ public sealed class ASTPrinter(DecompileContext context)
     internal HashSet<string> LocalVariableNames { get => TopFragmentContext!.LocalVariableNames; }
 
     /// <summary>
-    /// Stack used to manage fragment contexts.
+    /// The stack used to manage fragment contexts.
     /// </summary>
-    /// <remarks>
-    /// This is required because sometimes a fragment context's parent is not nested correctly, i.e. an anonymous function within a struct.
-    /// </remarks>
     private Stack<ASTFragmentContext> FragmentContextStack { get; } = new();
 
     /// <summary>
@@ -256,7 +253,7 @@ public sealed class ASTPrinter(DecompileContext context)
     /// <summary>
     /// Looks up a function name, given a function reference.
     /// </summary>
-    public string LookupFunction(IGMFunction function)
+    public string LookupFunction(IGMFunction function, ASTFragmentContext? overrideContext = null)
     {
         if (Context.GameContext.GlobalFunctions.TryGetFunctionName(function, out string? name))
         {
@@ -265,12 +262,7 @@ public sealed class ASTPrinter(DecompileContext context)
         }
 
         string funcName = function.Name.Content;
-        ASTFragmentContext fragmentContext = TopFragmentContext!;
-        if (fragmentContext.InFunctionDeclHeader)
-        {
-            // If within a function declaration header (arguments, inheritance call), use parent fragment
-            fragmentContext = fragmentContext.Parent!;
-        }
+        ASTFragmentContext fragmentContext = overrideContext ?? TopFragmentContext!;
         if (fragmentContext.SubFunctionNames.TryGetValue(funcName, out string? realName))
         {
             // We found a sub-function name within this fragment!

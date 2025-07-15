@@ -458,3 +458,4 @@ DPCLIBuild/
 Output/
 DeltarunePatcherCLI.zip
 /DeltaPatcherCLI/DeltaPatcher/Properties/launchSettings.json
+/DeltaPatcherCLI/DeltaPatcher/win_x64

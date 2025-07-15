@@ -425,11 +425,7 @@ public class BlockNode(ASTFragmentContext fragmentContext) : IFragmentNode, IBlo
     /// <inheritdoc/>
     public void PrintSingleLine(ASTPrinter printer)
     {
-        bool newFragment = FragmentContext != printer.TopFragmentContext;
-        if (newFragment)
-        {
-            printer.PushFragmentContext(FragmentContext);
-        }
+        printer.PushFragmentContext(FragmentContext);
 
         printer.EndLine();
         printer.Indent();
@@ -445,10 +441,7 @@ public class BlockNode(ASTFragmentContext fragmentContext) : IFragmentNode, IBlo
         }
         printer.Dedent();
 
-        if (newFragment)
-        {
-            printer.PopFragmentContext();
-        }
+        printer.PopFragmentContext();
     }
 
     /// <inheritdoc/>
@@ -485,11 +478,5 @@ public class BlockNode(ASTFragmentContext fragmentContext) : IFragmentNode, IBlo
         {
             EmptyLineAfter = context.Settings.EmptyLineAfterBlockLocals
         });
-    }
-
-    /// <inheritdoc/>
-    public IEnumerable<IBaseASTNode> EnumerateChildren()
-    {
-        return Children;
     }
 }

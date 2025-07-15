@@ -5,7 +5,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 
 namespace Underanalyzer.Decompiler.AST;
 
@@ -210,24 +209,6 @@ public class TryCatchNode(BlockNode tryBlock, BlockNode? catchBlock, VariableNod
         return true;
     }
 
-    /// <inheritdoc/>
-    public IEnumerable<IBaseASTNode> EnumerateChildren()
-    {
-        yield return Try;
-        if (CatchVariable is not null)
-        {
-            yield return CatchVariable;
-        }
-        if (Catch is not null)
-        {
-            yield return Catch;
-        }
-        if (Finally is not null)
-        {
-            yield return Finally;
-        }
-    }
-
     /// <summary>
     /// Represents the location where the finally block of a try statement ends.
     /// Never appears after AST cleaning, and cannot be printed.
@@ -316,12 +297,6 @@ public class TryCatchNode(BlockNode tryBlock, BlockNode? catchBlock, VariableNod
         public bool RequiresMultipleLines(ASTPrinter printer)
         {
             return false;
-        }
-
-        /// <inheritdoc/>
-        public IEnumerable<IBaseASTNode> EnumerateChildren()
-        {
-            return [];
         }
     }
 }

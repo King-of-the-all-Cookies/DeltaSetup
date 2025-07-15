@@ -4,7 +4,6 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-using System.Collections.Generic;
 using Underanalyzer.Decompiler.GameSpecific;
 
 namespace Underanalyzer.Decompiler.AST;
@@ -99,12 +98,6 @@ public class VariableHashNode(IGMVariable variable) : IExpressionNode, IStatemen
             return conditional.Resolve(cleaner, this);
         }
         return null;
-    }
-
-    /// <inheritdoc/>
-    public IEnumerable<IBaseASTNode> EnumerateChildren()
-    {
-        return [];
     }
 }
 

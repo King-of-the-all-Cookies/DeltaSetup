@@ -105,7 +105,7 @@ public sealed class DecompileContext
         }
     }
 
-    // Decompiles the AST from the code entry
+    // Decompiles the AST from the code entry4
     private AST.IStatementNode DecompileAST()
     {
         try

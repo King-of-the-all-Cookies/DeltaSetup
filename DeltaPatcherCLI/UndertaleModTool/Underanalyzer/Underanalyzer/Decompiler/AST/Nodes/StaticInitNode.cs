@@ -4,8 +4,6 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-using System.Collections.Generic;
-
 namespace Underanalyzer.Decompiler.AST;
 
 /// <summary>
@@ -60,11 +58,5 @@ public class StaticInitNode(BlockNode body) : IStatementNode
     public bool RequiresMultipleLines(ASTPrinter printer)
     {
         return Body.RequiresMultipleLines(printer);
-    }
-
-    /// <inheritdoc/>
-    public IEnumerable<IBaseASTNode> EnumerateChildren()
-    {
-        yield return Body;
     }
 }

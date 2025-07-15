@@ -56,20 +56,14 @@ async Task ExtractSprites(string folder, string prefix)
             Parallel.ForEach(sprites, (sprite) => 
             {
                 IncrementProgressParallel();
-                if (sprite.Textures.Count != 0) // fixes sprites with no frames
-                {
-                    ExtractSprite(sprite, folder, worker);
-                }
+                ExtractSprite(sprite, folder, worker);
             });
         } 
         else 
         {
             foreach (UndertaleSprite sprite in sprites) 
             {
-                if (sprite.Textures.Count != 0) // same as above
-                {
-                    ExtractSprite(sprite, folder, worker);
-                }
+                ExtractSprite(sprite, folder, worker);
                 IncrementProgressParallel();
             }
         }

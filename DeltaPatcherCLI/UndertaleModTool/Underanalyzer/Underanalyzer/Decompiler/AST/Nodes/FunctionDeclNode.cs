@@ -250,19 +250,17 @@ public class FunctionDeclNode(string? name, bool isConstructor, BlockNode body, 
             printer.Write('(');
         }
 
-        ASTFragmentContext bodyFragmentContext = Body.FragmentContext;
-        printer.PushFragmentContext(bodyFragmentContext);
-        bodyFragmentContext.InFunctionDeclHeader = true;
-
-        for (int i = 0; i <= bodyFragmentContext.MaxReferencedArgument; i++)
+        for (int i = 0; i <= Body.FragmentContext.MaxReferencedArgument; i++)
         {
-            printer.Write(bodyFragmentContext.GetNamedArgumentName(printer.Context, i));
+            printer.Write(Body.FragmentContext.GetNamedArgumentName(printer.Context, i));
             if (ArgumentDefaultValues.TryGetValue(i, out IExpressionNode? defaultValue))
             {
                 printer.Write(" = ");
+                printer.PushFragmentContext(Body.FragmentContext);
                 defaultValue.Print(printer);
+                printer.PopFragmentContext();
             }
-            if (i != bodyFragmentContext.MaxReferencedArgument)
+            if (i != Body.FragmentContext.MaxReferencedArgument)
             {
                 printer.Write(", ");
             }
@@ -270,14 +268,21 @@ public class FunctionDeclNode(string? name, bool isConstructor, BlockNode body, 
 
         printer.Write(')');
 
-        if (bodyFragmentContext.BaseParentCall is not null)
+        if (Body.FragmentContext.BaseParentCall is not null)
         {
             printer.Write(" : ");
-            bodyFragmentContext.BaseParentCall.Print(printer);
+            ASTFragmentContext outerFragmentContext = printer.TopFragmentContext!;
+            printer.PushFragmentContext(Body.FragmentContext);
+            if (Body.FragmentContext.BaseParentCall is FunctionCallNode functionCall)
+            {
+                functionCall.Print(printer, outerFragmentContext);
+            }
+            else
+            {
+                Body.FragmentContext.BaseParentCall.Print(printer);
+            }
+            printer.PopFragmentContext();
         }
-
-        bodyFragmentContext.InFunctionDeclHeader = false;
-        printer.PopFragmentContext();
 
         if (IsConstructor)
         {
@@ -305,15 +310,5 @@ public class FunctionDeclNode(string? name, bool isConstructor, BlockNode body, 
             return conditional.Resolve(cleaner, this);
         }
         return null;
-    }
-
-    /// <inheritdoc/>
-    public IEnumerable<IBaseASTNode> EnumerateChildren()
-    {
-        foreach (IExpressionNode expr in ArgumentDefaultValues.Values)
-        {
-            yield return expr;
-        }
-        yield return Body;
     }
 }

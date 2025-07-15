@@ -5,7 +5,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using Underanalyzer.Decompiler.GameSpecific;
 
 namespace Underanalyzer.Decompiler.AST;
@@ -101,11 +100,5 @@ public class StructNode(BlockNode body, ASTFragmentContext fragmentContext) : IF
             return conditional.Resolve(cleaner, this);
         }
         return null;
-    }
-
-    /// <inheritdoc/>
-    public IEnumerable<IBaseASTNode> EnumerateChildren()
-    {
-        yield return Body;
     }
 }

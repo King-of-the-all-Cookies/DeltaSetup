@@ -13,7 +13,7 @@ namespace UndertaleModLib.Decompiler
         {
             if (locals is null)
             {
-                sb.Append("; Missing code locals, possibly due to unsupported bytecode version or brand new code entry.\n");
+                sb.AppendLine("; Missing code locals, possibly due to unsupported bytecode version or brand new code entry.");
                 return;
             }
             
@@ -32,7 +32,7 @@ namespace UndertaleModLib.Decompiler
                     sb.Append(' ');
                     sb.Append(vars.IndexOf(refVar));
                 }
-                sb.Append('\n');
+                sb.AppendLine();
             }
         }
         
@@ -53,7 +53,7 @@ namespace UndertaleModLib.Decompiler
                 }
                 else
                 {
-                    sb.Append("; WARNING: Missing code locals, possibly due to unsupported bytecode version or a brand new code entry.\n");
+                    sb.AppendLine("; WARNING: Missing code locals, possibly due to unsupported bytecode version or a brand new code entry.");
                 }
             }
             else if (locals is null && code.WeirdLocalFlag)
@@ -86,8 +86,8 @@ namespace UndertaleModLib.Decompiler
                 // Print fragment at current address
                 if (fragments.TryGetValue(address, out string entry))
                 {
-                    sb.Append('\n');
-                    sb.Append($"> {entry}\n");
+                    sb.AppendLine();
+                    sb.AppendLine($"> {entry}");
 
                     // No need for a second newline before blocks
                     doNewline = false;
@@ -98,14 +98,14 @@ namespace UndertaleModLib.Decompiler
                 {
                     if (doNewline)
                     {
-                        sb.Append('\n');
+                        sb.AppendLine();
                     }
-                    sb.Append($":[{ind}]\n");
+                    sb.AppendLine($":[{ind}]");
                 }
 
                 // Print actual instruction at current address
                 inst.ToString(sb, code, address, blocks);
-                sb.Append('\n');
+                sb.AppendLine();
 
                 // Advance address to next instruction
                 address += inst.CalculateInstructionSize();
@@ -114,7 +114,7 @@ namespace UndertaleModLib.Decompiler
             // Print ending block
             if (printedLocalVars || address > 0)
             {
-                sb.Append('\n');
+                sb.AppendLine();
             }
             sb.Append(":[end]");
 

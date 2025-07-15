@@ -745,14 +745,11 @@ namespace UndertaleModLib
             }
         }
 
-        public void Align(int alignment)
+        public void Align(int alignment, byte paddingbyte = 0x00)
         {
-            while ((AbsPosition & (alignment - 1)) != 0)
+            while ((AbsPosition & (alignment - 1)) != paddingbyte)
             {
-                if (ReadByte() != 0)
-                {
-                    throw new IOException("Invalid alignment padding");
-                }
+                DebugUtil.Assert(ReadByte() == paddingbyte, "Invalid alignment padding");
             }
         }
 
@@ -970,11 +967,11 @@ namespace UndertaleModLib
             }
         }
 
-        public void Align(int alignment)
+        public void Align(int alignment, byte paddingbyte = 0x00)
         {
-            while ((Position & (alignment - 1)) != 0)
+            while ((Position & (alignment - 1)) != paddingbyte)
             {
-                Write((byte)0);
+                Write(paddingbyte);
             }
         }
 

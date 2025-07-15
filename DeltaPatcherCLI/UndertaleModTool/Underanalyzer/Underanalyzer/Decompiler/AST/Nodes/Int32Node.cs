@@ -4,7 +4,6 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-using System.Collections.Generic;
 using Underanalyzer.Decompiler.GameSpecific;
 
 namespace Underanalyzer.Decompiler.AST;
@@ -64,11 +63,5 @@ public class Int32Node(int value) : IConstantNode<int>, IMacroResolvableNode, IC
             return type32.Resolve(cleaner, this, Value);
         }
         return null;
-    }
-
-    /// <inheritdoc/>
-    public IEnumerable<IBaseASTNode> EnumerateChildren()
-    {
-        return [];
     }
 }

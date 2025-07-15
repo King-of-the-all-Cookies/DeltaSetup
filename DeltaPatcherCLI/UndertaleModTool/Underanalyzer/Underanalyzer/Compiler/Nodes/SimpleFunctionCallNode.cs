@@ -420,7 +420,7 @@ internal sealed class SimpleFunctionCallNode : IMaybeStatementASTNode
     /// <summary>
     /// Generates code for this function call, using a direct call (not any indirect variables, etc.).
     /// </summary>
-    public void GenerateDirectCode(BytecodeContext context)
+    public void GenerateDirectCode(BytecodeContext context, FunctionScope? overrideCallScope = null)
     {
         // Handle array copy-on-write
         if (context.CanGenerateArrayOwners)
@@ -434,12 +434,8 @@ internal sealed class SimpleFunctionCallNode : IMaybeStatementASTNode
         // Push arguments to stack
         GenerateArguments(context);
 
-        // If currently generating a function declaration header (arguments, inheritance calls),
-        // use the outer scope for function resolution. Otherwise, use current scope.
-        FunctionScope scope = context.CurrentScope.GeneratingFunctionDeclHeader ? context.CurrentScope.Parent! : context.CurrentScope;
-
         // Emit actual call instruction
-        FunctionPatch funcPatch = new(scope, FunctionName, BuiltinFunction);
+        FunctionPatch funcPatch = new(overrideCallScope ?? context.CurrentScope, FunctionName, BuiltinFunction);
         context.EmitCall(funcPatch, Arguments.Count);
         context.PushDataType(DataType.Variable);
 

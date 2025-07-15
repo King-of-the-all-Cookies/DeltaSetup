@@ -145,10 +145,4 @@ public class EnumDeclNode(GMEnum gmEnum) : IStatementNode
             enumDecl.Clean(cleaner);
         }
     }
-
-    /// <inheritdoc/>
-    public IEnumerable<IBaseASTNode> EnumerateChildren()
-    {
-        return [];
-    }
 }

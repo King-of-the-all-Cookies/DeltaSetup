@@ -5,7 +5,6 @@
 */
 
 using System;
-using System.Collections.Generic;
 using Underanalyzer.Decompiler.GameSpecific;
 using static Underanalyzer.IGMInstruction;
 
@@ -296,7 +295,7 @@ public class AssignNode : IStatementNode, IExpressionNode, IBlockCleanupNode
     /// <summary>
     /// Returns whether a variable name is a valid GML identifier or not.
     /// </summary>
-    private static bool VariableNameIsValidIdentifier(string name)
+    private bool VariableNameIsValidIdentifier(string name)
     {
         // If name is empty, it's clearly not valid
         if (name.Length == 0)
@@ -437,15 +436,5 @@ public class AssignNode : IStatementNode, IExpressionNode, IBlockCleanupNode
             return true;
         }
         return false;
-    }
-
-    /// <inheritdoc/>
-    public IEnumerable<IBaseASTNode> EnumerateChildren()
-    {
-        yield return Variable;
-        if (Value is not null)
-        {
-            yield return Value;
-        }
     }
 }

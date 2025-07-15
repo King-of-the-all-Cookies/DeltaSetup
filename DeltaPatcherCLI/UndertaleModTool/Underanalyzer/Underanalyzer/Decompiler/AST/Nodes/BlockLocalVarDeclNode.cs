@@ -57,10 +57,4 @@ public class BlockLocalVarDeclNode : IStatementNode
     {
         return false;
     }
-
-    /// <inheritdoc/>
-    public IEnumerable<IBaseASTNode> EnumerateChildren()
-    {
-        return [];
-    }
 }
