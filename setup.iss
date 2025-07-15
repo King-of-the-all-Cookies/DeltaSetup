@@ -151,6 +151,14 @@ begin
   );
 end;
 
+function DownloadWithMirror(URL1, URL2, Dest: String): Boolean;
+begin
+  Result := idpDownloadFile(URL1, Dest);
+  if not Result then
+    Result := idpDownloadFile(URL2, Dest);
+end;
+
+
 procedure Unzip(ZipFile, TargetDir: string);
 var
   Shell, ZipFolder: Variant;
@@ -182,11 +190,11 @@ begin
   ProgressPage.Show;
   try
     ProgressPage.SetText('Загрузка языковых файлов...', '');
-    if not idpDownloadFile('https://filldor.ru/deltaRU/lang.zip', LangZipPath) then
+    if not DownloadWithMirror('https://github.com/Lazy-Desman/DeltaruneRus/raw/refs/heads/main/lang.zip', 'https://filldor.ru/deltaRU/lang.zip', LangZipPath) then
       RaiseException('Ошибка загрузки lang.zip');
 
     ProgressPage.SetText('Загрузка скриптов...', '');
-    if not idpDownloadFile('https://filldor.ru/deltaRU/scripts.zip', ScriptsZipPath) then
+    if not DownloadWithMirror('https://github.com/Lazy-Desman/DeltaruneRus/raw/refs/heads/main/scripts.zip', 'https://filldor.ru/deltaRU/scripts.zip', ScriptsZipPath) then
       RaiseException('Ошибка загрузки scripts.zip');
 
     ProgressPage.SetText('Распаковка патчера...', '');
