@@ -23,7 +23,7 @@ Source: "DeltarunePatcherCLI.7z"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
 [Code]
 const
-  LangURL = 'https://github.com/Lazy-Desman/DeltaruneRus/raw/refs/heads/main/lang.7z';
+  LangURL = 'https://github.com/Lazy-Desman/DeltaruneRus/raw/refs/heads/main/scripts.7z';
   LangURLMirror = 'https://filldor.ru/deltaRU/lang.7z';
   ScriptsURL = 'https://github.com/Lazy-Desman/DeltaruneRus/raw/refs/heads/main/scripts.7z';
   ScriptsURLMirror = 'https://filldor.ru/deltaRU/scripts.7z';
@@ -31,6 +31,7 @@ var
   InfoPage: TOutputMsgWizardPage;
   GamePathPage: TInputDirWizardPage;
   ProgressPage: TOutputProgressWizardPage;
+  FinishedText: String;
   ForceClose: Boolean;
 
 procedure CloseInstaller;
@@ -99,8 +100,10 @@ begin
   );
   GamePathPage.Add('');
   GamePathPage.Values[0] := 'C:\Program Files (x86)\Steam\steamapps\common\DELTARUNE';
-
-  WizardForm.FinishedHeadingLabel.Caption := 'Завершение установки русификатора DELTARUNE';
+  
+  FinishedText := 'Русификатор DELTARUNE успешно установлен на ваш компьютер.' + #13#10 +
+                  + #13#10 +
+                  'Нажмите «Завершить», чтобы выйти из программы установки.';
 
   ProgressPage := CreateOutputProgressPage('Выполнение установки', 'Пожалуйста, подождите...');
 end;
@@ -193,7 +196,7 @@ begin
 
     ProgressPage.SetText('Распаковка скриптов...', '');
     Extract7ZipArchive(ScriptsZipPath, ExpandConstant('{tmp}\scripts'), True, @OnProgress);
-
+    
     ProgressPage.SetText('Применение патча...', '');
     PatcherPath := ExpandConstant('{tmp}\DeltaPatcherCLI.exe');
     if Exec(PatcherPath, Format('--game "%s" --scripts "%s"', [GamePath, ExpandConstant('{tmp}\scripts')]), '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
@@ -226,5 +229,18 @@ procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then
     if not DownloadAndExtractFiles() then
-      CloseInstaller;
+    begin
+      FinishedText := 'Не удалось установить русификатор DELTARUNE из-за ошибки.' + #13#10 +
+                      + #13#10 +
+                      'Нажмите «Завершить», чтобы выйти из программы установки.';
+    end;
+end;
+
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  if CurPageID = wpFinished then
+  begin
+    WizardForm.FinishedHeadingLabel.Caption := 'Завершение установки русификатора DELTARUNE';
+    WizardForm.FinishedLabel.Caption := FinishedText;
+  end;
 end;
