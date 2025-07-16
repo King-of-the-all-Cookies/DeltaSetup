@@ -26,7 +26,7 @@ Source: "DeltarunePatcherCLI.7z"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
 [Code]
 const
-  LangURL = 'https://github.com/Lazy-Desman/DeltaruneRus/raw/refs/heads/main/scripts.7z';
+  LangURL = 'https://github.com/Lazy-Desman/DeltaruneRus/raw/refs/heads/main/lang.7z';
   LangURLMirror = 'https://filldor.ru/deltaRU/lang.7z';
   ScriptsURL = 'https://github.com/Lazy-Desman/DeltaruneRus/raw/refs/heads/main/scripts.7z';
   ScriptsURLMirror = 'https://filldor.ru/deltaRU/scripts.7z';
