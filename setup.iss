@@ -1,6 +1,6 @@
 [Setup]
 AppName=Русификатор DELTARUNE
-AppVersion=1.1.1
+AppVersion=1.2.0
 AppPublisher=LazyDesman
 DefaultDirName={autopf}\DELTARUNE Russian Patch
 OutputBaseFilename=DeltaruneRussianPatcherSetup
@@ -17,6 +17,9 @@ WizardImageFile=banner.bmp
 
 [Languages]
 Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
+
+[Messages]
+ExitSetupMessage=Установка не завершена. Если вы выйдете, русификатор не будет установлен.%n%nВы сможете завершить установку, запустив программу установки позже.%n%nВыйти из программы установки?
 
 [Files]
 Source: "DeltarunePatcherCLI.7z"; DestDir: "{tmp}"; Flags: deleteafterinstall
@@ -167,6 +170,37 @@ begin
   end;
 end;
 
+function HandlePatcherError(GamePath: String): Boolean;
+var
+  LogPath, FirstLogLine: String;
+  LogText: AnsiString;
+  LineEndPos: Integer;
+begin
+  if GamePath[Length(GamePath)] = '\' then
+    LogPath := GamePath + 'deltapatcher-log.txt'
+  else
+    LogPath := GamePath + '\deltapatcher-log.txt';
+  
+  if FileExists(LogPath) then
+  begin
+    if LoadStringFromFile(LogPath, LogText) then
+    begin
+      LineEndPos := Pos(#13#10, LogText);
+      if (LineEndPos > 0) and (LineEndPos < 512) then
+      begin
+        FirstLogLine := Copy(LogText, 1, LineEndPos - 1);
+        
+        MsgBox('Ошибка применения патча: ' + FirstLogLine + #13#10 +
+               'Лог установщика сохранён в файл "' + LogPath + '".', mbError, MB_OK);
+        Result := True;
+        exit;
+      end;
+    end;
+  end;
+  
+  Result := False;
+end;
+
 function DownloadAndExtractFiles(): Boolean;
 var
   LangZipPath, ScriptsZipPath, PatcherZipPath, GamePath, PatcherPath: String;
@@ -203,7 +237,9 @@ begin
     begin
       if ResultCode <> 0 then
       begin
-        MsgBox('Ошибка применения патча: ' + IntToStr(ResultCode), mbError, MB_OK);
+        if not HandlePatcherError(GamePath) then
+          MsgBox('Ошибка применения патча, код ошибки: ' + IntToStr(ResultCode) + '.', mbError, MB_OK);
+        
         Result := False;
         exit;
       end;

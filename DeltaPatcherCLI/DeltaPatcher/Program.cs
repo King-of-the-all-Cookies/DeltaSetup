@@ -86,6 +86,8 @@ class Program
         }
         catch (Exception ex)
         {
+            ConsoleQuickEditSwitcher.SwitchQuickMode(true);
+
             WriteLine("-----------------------------------");
             WriteLine("КРИТИЧЕСКАЯ ОШИБКА:");
             WriteLine(ex.Message);
@@ -101,8 +103,10 @@ class Program
             string logPath = Path.Combine(gamePath, "deltapatcher-log.txt");
             try
             {
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
                 string logText = $"{ex}\n\n\n{outputTextBuilder}";
-                File.WriteAllText(logPath, logText);
+                File.WriteAllText(logPath, logText, Encoding.GetEncoding(1251));
 
                 WriteLine("-----------------------------------");
                 WriteLine($"Детали ошибки сохранены в файл: \"{logPath}\".");
