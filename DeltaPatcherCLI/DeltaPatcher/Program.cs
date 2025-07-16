@@ -15,7 +15,7 @@ class Program
     private static ScriptOptions scriptOptions;
     private static readonly string Version = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
 
-    static async Task Main(string[] args)
+    private static async Task Main(string[] args)
     {
         try
         {
@@ -50,7 +50,7 @@ class Program
             // проверка дельты
             if (!ValidatePaths(gamePath, scriptsPath))
             {
-                Console.WriteLine("Патч не может быть применён из-за ошибок в путях");
+                Console.WriteLine("Патч не может быть применён из-за ошибок в путях.");
                 Environment.Exit(1);
             }
 
@@ -64,11 +64,17 @@ class Program
                                            typeof(System.Text.RegularExpressions.Regex).GetTypeInfo().Assembly,
                                            typeof(Underanalyzer.Decompiler.DecompileContext).Assembly);
 
+            // Отключить возможность быстрого выбора текста мышью,
+            // чтобы предотвратить зависание при случайном выделении.
+            ConsoleQuickEditSwitcher.SwitchQuickMode(false);
+
             // применяем патч
             await ApplyChapterPatch(gamePath, scriptsPath, "Menu", "data.win");
             await ApplyChapterPatch(gamePath, scriptsPath, "Chapter1", @"chapter1_windows\data.win");
             await ApplyChapterPatch(gamePath, scriptsPath, "Chapter2", @"chapter2_windows\data.win");
             await ApplyChapterPatch(gamePath, scriptsPath, "Chapter3", @"chapter3_windows\data.win");
+
+            ConsoleQuickEditSwitcher.SwitchQuickMode(true);
 
             Console.WriteLine("-----------------------------------");
             Console.WriteLine("Патч успешно применён!");
@@ -87,10 +93,12 @@ class Program
                 Console.WriteLine(ex.InnerException.Message);
             }
 
+            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string logPath = Path.Combine(appDataPath, "deltapatcher-log.txt");
             Console.WriteLine("-----------------------------------");
-            Console.WriteLine("Детали ошибки сохранены в patcher-error.log");
+            Console.WriteLine($"Детали ошибки сохранены в файл: \"${logPath}\".");
 
-            File.WriteAllText("patcher-error.log", $"[{DateTime.Now}] ERROR:\n{ex}");
+            File.WriteAllText(logPath, $"[{DateTime.Now}] ERROR:\n{ex}");
             Environment.Exit(2);
         }
     }
@@ -133,7 +141,7 @@ class Program
         }
     }
 
-    static async Task ApplyChapterPatch(string gamePath, string scriptsPath, string chapter, string dataWin)
+    private static async Task ApplyChapterPatch(string gamePath, string scriptsPath, string chapter, string dataWin)
     {
         try
         {

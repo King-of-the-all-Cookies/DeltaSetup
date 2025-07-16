@@ -210,7 +210,7 @@ begin
     end
     else
     begin
-      MsgBox('Не удалось запустить патчер', mbError, MB_OK);
+      MsgBox('Не удалось запустить патчер.', mbError, MB_OK);
       Result := False;
       exit;
     end;
