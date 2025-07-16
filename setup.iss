@@ -1,6 +1,6 @@
 [Setup]
 AppName=Русификатор DELTARUNE
-AppVersion=1.2.0
+AppVersion=1.2.1
 AppPublisher=LazyDesman
 DefaultDirName={autopf}\DELTARUNE Russian Patch
 OutputBaseFilename=DeltaruneRussianPatcherSetup
@@ -26,9 +26,9 @@ Source: "DeltarunePatcherCLI.7z"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
 [Code]
 const
-  LangURL = 'https://github.com/Lazy-Desman/DeltaruneRus/raw/refs/heads/main/lang.7z';
+  LangURL = 'https://github.com/Lazy-Desman/DeltaruneRus/releases/download/latest/lang.7z';
   LangURLMirror = 'https://filldor.ru/deltaRU/lang.7z';
-  ScriptsURL = 'https://github.com/Lazy-Desman/DeltaruneRus/raw/refs/heads/main/scripts.7z';
+  ScriptsURL = 'https://github.com/Lazy-Desman/DeltaruneRus/releases/download/latest/scripts.7z';
   ScriptsURLMirror = 'https://filldor.ru/deltaRU/scripts.7z';
 var
   InfoPage: TOutputMsgWizardPage;
