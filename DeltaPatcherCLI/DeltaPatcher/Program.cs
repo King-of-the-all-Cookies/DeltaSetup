@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.Scripting;
 using System.Reflection;
 using UndertaleModLib;
 using System.Runtime;
+using System.Text;
 
 namespace DeltaPatcherCLI;
 
@@ -14,18 +15,20 @@ class Program
 {
     private static ScriptOptions scriptOptions;
     private static readonly string Version = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
+    private static readonly StringBuilder outputTextBuilder = new();
+    private static bool writeOutputToFile = true;
 
     private static async Task Main(string[] args)
     {
+        string gamePath = "";
+        string scriptsPath = "";
+
         try
         {
-            Console.WriteLine("DELTARUNE Russian Patcher CLI");
-            Console.WriteLine($"Version {Version}");
-            Console.WriteLine("Developed by LazyDesman");
-            Console.WriteLine("-----------------------------------");
-
-            string gamePath = "";
-            string scriptsPath = "";
+            WriteLine("DELTARUNE Russian Patcher CLI");
+            WriteLine($"Version {Version}");
+            WriteLine("Developed by LazyDesman");
+            WriteLine("-----------------------------------");
 
             // парсим аргументы
             for (int i = 0; i < args.Length; i++)
@@ -39,18 +42,18 @@ class Program
             // справка
             if (string.IsNullOrEmpty(gamePath) || string.IsNullOrEmpty(scriptsPath))
             {
-                Console.WriteLine("Использование:");
-                Console.WriteLine("DeltarunePatcherCLI.exe --game \"путь_к_игре\" --scripts \"путь_к_скриптам\"");
-                Console.WriteLine();
-                Console.WriteLine("Пример:");
-                Console.WriteLine("DeltarunePatcherCLI.exe --game \"C:\\Games\\DELTARUNE\" --scripts \"C:\\Temp\\scripts\"");
+                WriteLine("Использование:");
+                WriteLine("DeltarunePatcherCLI.exe --game \"путь_к_игре\" --scripts \"путь_к_скриптам\"");
+                WriteLine();
+                WriteLine("Пример:");
+                WriteLine("DeltarunePatcherCLI.exe --game \"C:\\Games\\DELTARUNE\" --scripts \"C:\\Temp\\scripts\"");
                 Environment.Exit(0);
             }
 
             // проверка дельты
             if (!ValidatePaths(gamePath, scriptsPath))
             {
-                Console.WriteLine("Патч не может быть применён из-за ошибок в путях.");
+                WriteLine("Патч не может быть применён из-за ошибок в путях.");
                 Environment.Exit(1);
             }
 
@@ -76,67 +79,87 @@ class Program
 
             ConsoleQuickEditSwitcher.SwitchQuickMode(true);
 
-            Console.WriteLine("-----------------------------------");
-            Console.WriteLine("Патч успешно применён!");
-            Console.WriteLine("Теперь можно запускать игру с русским переводом");
+            WriteLine("-----------------------------------");
+            WriteLine("Патч успешно применён!");
+            WriteLine("Теперь можно запускать игру с русским переводом");
             Environment.Exit(0);
         }
         catch (Exception ex)
         {
-            Console.WriteLine("-----------------------------------");
-            Console.WriteLine("КРИТИЧЕСКАЯ ОШИБКА:");
-            Console.WriteLine(ex.Message);
+            WriteLine("-----------------------------------");
+            WriteLine("КРИТИЧЕСКАЯ ОШИБКА:");
+            WriteLine(ex.Message);
 
             if (ex.InnerException != null)
             {
-                Console.WriteLine("Inner exception:");
-                Console.WriteLine(ex.InnerException.Message);
+                WriteLine("Inner exception:");
+                WriteLine(ex.InnerException.Message);
             }
 
-            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string logPath = Path.Combine(appDataPath, "deltapatcher-log.txt");
-            Console.WriteLine("-----------------------------------");
-            Console.WriteLine($"Детали ошибки сохранены в файл: \"${logPath}\".");
+            writeOutputToFile = false;
 
-            File.WriteAllText(logPath, $"[{DateTime.Now}] ERROR:\n{ex}");
+            string logPath = Path.Combine(gamePath, "deltapatcher-log.txt");
+            try
+            {
+                string logText = $"{ex}\n\n\n{outputTextBuilder}";
+                File.WriteAllText(logPath, logText);
+
+                WriteLine("-----------------------------------");
+                WriteLine($"Детали ошибки сохранены в файл: \"{logPath}\".");
+            }
+            catch
+            {
+                WriteLine("-----------------------------------");
+                WriteLine($"Не удалось записать лог в файл \"{logPath}\".");
+                WriteLine("(нажмите любую клавишу для завершения программы)");
+                Console.ReadKey();
+            }
+            
             Environment.Exit(2);
         }
     }
 
-    static bool ValidatePaths(string gamePath, string scriptsPath)
+
+    public static void WriteLine(string line = null)
+    {
+        Console.WriteLine(line);
+        if (writeOutputToFile)
+            outputTextBuilder.AppendLine(line);
+    }
+    private static bool ValidatePaths(string gamePath, string scriptsPath)
     {
         try
         {
-            Console.WriteLine("Проверка путей...");
-            Console.WriteLine($"- Папка игры: {gamePath}");
-            Console.WriteLine($"- Папка скриптов: {scriptsPath}");
+            WriteLine("Проверка путей...");
+            WriteLine($"- Папка игры: {gamePath}");
+            WriteLine($"- Папка скриптов: {scriptsPath}");
 
             // проверка существования папок
             if (!Directory.Exists(gamePath))
             {
-                Console.WriteLine("ОШИБКА: Папка игры не найдена");
+                WriteLine("ОШИБКА: Папка игры не найдена");
                 return false;
             }
 
             if (!Directory.Exists(scriptsPath))
             {
-                Console.WriteLine("ОШИБКА: Папка со скриптами не найдена");
+                WriteLine("ОШИБКА: Папка со скриптами не найдена");
                 return false;
             }
 
             // проверка дельты 2
             if (!File.Exists(Path.Combine(gamePath, "DELTARUNE.exe")))
             {
-                Console.WriteLine("ОШИБКА: DELTARUNE.exe не найден");
+                WriteLine("ОШИБКА: DELTARUNE.exe не найден");
                 return false;
             }
 
-            Console.WriteLine("Все пути корректны");
+            WriteLine("Все пути корректны");
             return true;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Ошибка при проверке путей: {ex.Message}");
+            WriteLine($"Ошибка при проверке путей: {ex.Message}");
             return false;
         }
     }
@@ -148,10 +171,10 @@ class Program
             string dataWinPath = Path.Combine(gamePath, dataWin);
             string scriptPath = Path.Combine(scriptsPath, chapter, "Fix.csx");
 
-            Console.WriteLine();
-            Console.WriteLine($"===== ПАТЧИНГ ГЛАВЫ: {chapter.ToUpper()} =====");
-            Console.WriteLine($"- Файл игры: {dataWinPath}");
-            Console.WriteLine($"- Скрипт патча: {scriptPath}");
+            WriteLine();
+            WriteLine($"===== ПАТЧИНГ ГЛАВЫ: {chapter.ToUpper()} =====");
+            WriteLine($"- Файл игры: {dataWinPath}");
+            WriteLine($"- Скрипт патча: {scriptPath}");
 
             // проверка игры
             if (!File.Exists(dataWinPath))
@@ -168,24 +191,24 @@ class Program
             string backupPath = dataWinPath + ".backup";
             if (File.Exists(backupPath))
             {
-                Console.WriteLine("- Восстановление из предыдущей резервной копии...");
+                WriteLine("- Восстановление из предыдущей резервной копии...");
                 File.Copy(backupPath, dataWinPath, true);
             }
             else
             {
-                Console.WriteLine("- Создание резервной копии...");
+                WriteLine("- Создание резервной копии...");
                 File.Copy(dataWinPath, backupPath, true);
             }
 
             // читаем и модим
-            Console.WriteLine("- Чтение data.win...");
+            WriteLine("- Чтение data.win...");
             UndertaleData data;
             using (var fileStream = File.OpenRead(dataWinPath))
             {
                 data = UndertaleIO.Read(fileStream);
             }
 
-            Console.WriteLine("- Применение скрипта...");
+            WriteLine("- Применение скрипта...");
             var script = File.ReadAllText(scriptPath);
 
             ScriptGlobals scriptGlobals = new()
@@ -208,7 +231,7 @@ class Program
 
             await CSharpScript.RunAsync(script, scriptOptions, globals: scriptGlobals);
 
-            Console.WriteLine("- Сохранение изменений...");
+            WriteLine("- Сохранение изменений...");
             using (var fileStream = File.Create(dataWinPath))
             {
                 UndertaleIO.Write(fileStream, data);
@@ -222,17 +245,17 @@ class Program
             GC.Collect();
             GC.WaitForPendingFinalizers();
 
-            Console.WriteLine($"- Глава {chapter} успешно пропатчена!");
+            WriteLine($"- Глава {chapter} успешно пропатчена!");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"!!! ОШИБКА ПРИ ПАТЧИНГЕ ГЛАВЫ {chapter}:");
-            Console.WriteLine(ex.Message);
+            WriteLine($"!!! ОШИБКА ПРИ ПАТЧИНГЕ ГЛАВЫ {chapter}:");
+            WriteLine(ex.Message);
 
             if (ex.InnerException != null)
             {
-                Console.WriteLine("Inner exception:");
-                Console.WriteLine(ex.InnerException.Message);
+                WriteLine("Inner exception:");
+                WriteLine(ex.InnerException.Message);
             }
 
             throw;
@@ -255,7 +278,7 @@ public class ScriptGlobals
     public void ScriptMessage(string message, bool dummy = false)
     {
         if (!dummy)
-            Console.WriteLine(message);
+            Program.WriteLine(message);
     }
 
     // TODO?
