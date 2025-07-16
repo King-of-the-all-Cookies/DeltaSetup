@@ -31,6 +31,18 @@ var
   InfoPage: TOutputMsgWizardPage;
   GamePathPage: TInputDirWizardPage;
   ProgressPage: TOutputProgressWizardPage;
+  ForceClose: Boolean;
+
+procedure CloseInstaller;
+begin
+  ForceClose := True;
+  WizardForm.Close;
+end;
+
+procedure CancelButtonClick(CurPageID: Integer; var Cancel, Confirm: Boolean);
+begin
+  Confirm := not ForceClose;
+end;
 
 // Поиск DELTARUNE.exe
 function FindGameExe(): String;
@@ -152,7 +164,7 @@ begin
   end;
 end;
 
-procedure DownloadAndExtractFiles;
+function DownloadAndExtractFiles(): Boolean;
 var
   LangZipPath, ScriptsZipPath, PatcherZipPath, GamePath, PatcherPath: String;
   ResultCode: Integer;
@@ -168,7 +180,7 @@ begin
     DownloadToTempWithMirror('Загрузка скриптов...', ScriptsURL, ScriptsURLMirror, 'scripts.7z');
   except
     MsgBox('В процессе скачивания файлов произошла ошибка: ' + GetExceptionMessage(), mbError, MB_OK);
-    ProgressPage.Hide;
+    Result := False;
     exit;
   end;
   
@@ -187,19 +199,32 @@ begin
     if Exec(PatcherPath, Format('--game "%s" --scripts "%s"', [GamePath, ExpandConstant('{tmp}\scripts')]), '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
     begin
       if ResultCode <> 0 then
+      begin
         MsgBox('Ошибка применения патча: ' + IntToStr(ResultCode), mbError, MB_OK);
+        Result := False;
+        exit;
+      end;
     end
     else
+    begin
       MsgBox('Не удалось запустить патчер', mbError, MB_OK);
+      Result := False;
+      exit;
+    end;
   except
     MsgBox('В процессе установки произошла ошибка: ' + GetExceptionMessage(), mbError, MB_OK);
+    Result := False;
+    exit;
   finally
     ProgressPage.Hide;
   end;
+  
+  Result := True;
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then
-    DownloadAndExtractFiles;
+    if not DownloadAndExtractFiles() then
+      CloseInstaller;
 end;
