@@ -161,7 +161,7 @@ class Program
         }
         catch
         {
-            WriteLine($"Внимание - не удалось проверить наличие аттрибута (или убрать) \"Только чтение\" у файла \"{Path.GetFileName(filePath)}\".");
+            WriteLine($"Внимание - не удалось проверить наличие атрибута (или убрать) \"Только чтение\" у файла \"{Path.GetFileName(filePath)}\".");
         }
     }
     public static void FileCopyNoRO(string sourceFileName, string destFileName, bool overwrite = false)
