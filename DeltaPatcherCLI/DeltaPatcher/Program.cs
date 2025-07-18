@@ -152,6 +152,9 @@ class Program
     {
         try
         {
+            if (!File.Exists(filePath))
+                return;
+
             FileAttributes attributes = File.GetAttributes(filePath);
             if (attributes.HasFlag(FileAttributes.ReadOnly))
                 File.SetAttributes(filePath, attributes & ~FileAttributes.ReadOnly);
