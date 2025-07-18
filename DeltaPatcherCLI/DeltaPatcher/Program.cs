@@ -8,6 +8,7 @@ using System.Reflection;
 using UndertaleModLib;
 using System.Runtime;
 using System.Text;
+using UndertaleModLib.Scripting;
 
 namespace DeltaPatcherCLI;
 
@@ -88,15 +89,25 @@ class Program
         {
             ConsoleQuickEditSwitcher.SwitchQuickMode(true);
 
-            WriteLine("-----------------------------------");
-            WriteLine("КРИТИЧЕСКАЯ ОШИБКА:");
-            WriteLine(ex.Message);
-
-            if (ex.InnerException != null)
+            if (ex is ScriptException)
             {
-                WriteLine("Inner exception:");
-                WriteLine(ex.InnerException.Message);
+                WriteLine("-----------------------------------");
+                WriteLine($"Ошибка скрипта:");
+                WriteLine(ex.Message);
             }
+            else
+            {
+                WriteLine("-----------------------------------");
+                WriteLine("КРИТИЧЕСКАЯ ОШИБКА:");
+                WriteLine(ex.Message);
+
+                if (ex.InnerException != null)
+                {
+                    WriteLine("Inner exception:");
+                    WriteLine(ex.InnerException.Message);
+                }
+            }
+                
 
             writeOutputToFile = false;
 
@@ -105,16 +116,21 @@ class Program
             {
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-                string logText = $"{ex}\n\n\n{outputTextBuilder}";
+                string logText;
+                if (ex is ScriptException)
+                    logText = $"{ex.Message}\n\n\n{outputTextBuilder}";
+                else
+                    logText = $"{ex}\n\n\n{outputTextBuilder}";
+
                 File.WriteAllText(logPath, logText, Encoding.GetEncoding(1251));
 
                 WriteLine("-----------------------------------");
-                WriteLine($"Детали ошибки сохранены в файл: \"{logPath}\".");
+                WriteLine($"Детали ошибки и лог установщика сохранены в файл: \"{logPath}\".");
             }
             catch
             {
                 WriteLine("-----------------------------------");
-                WriteLine($"Не удалось записать лог в файл \"{logPath}\".");
+                WriteLine($"Не удалось записать лог установщика в файл \"{logPath}\".");
                 WriteLine("(нажмите любую клавишу для завершения программы)");
                 Console.ReadKey();
             }
@@ -124,9 +140,10 @@ class Program
     }
 
 
-    public static void WriteLine(string line = null)
+    public static void WriteLine(string line = null, bool onlyToFile = false)
     {
-        Console.WriteLine(line);
+        if (!onlyToFile)
+            Console.WriteLine(line);
         if (writeOutputToFile)
             outputTextBuilder.AppendLine(line);
     }
@@ -252,11 +269,15 @@ class Program
             prop = scriptGlobals.FilePath;
             prop = scriptGlobals.ScriptPath;
             scriptGlobals.ScriptMessage(null, true);
+            scriptGlobals.ScriptWarning(null, true);
+            scriptGlobals.ScriptError(null, true);
             scriptGlobals.SyncBinding(null, true);
             scriptGlobals.SetProgressBar(null, null, -1, -1);
             scriptGlobals.UpdateProgressValue(-1);
             scriptGlobals.IncrementProgress();
             scriptGlobals.GetProgress();
+            scriptGlobals.ShowMessage(null, true);
+            scriptGlobals.ShowWarning(null, true);
 
             await CSharpScript.RunAsync(script, scriptOptions, globals: scriptGlobals);
 
@@ -309,10 +330,36 @@ public class ScriptGlobals
         if (!dummy)
             Program.WriteLine(message);
     }
+    public void ScriptWarning(string message, bool dummy = false)
+    {
+        if (!dummy)
+            Program.WriteLine($"[ПРЕДУПРЕЖДЕНИЕ] {message}");
+    }
+    public void ScriptError(string message, bool dummy = false)
+    {
+        if (!dummy)
+        {
+            string text = $"[ОШИБКА] {message}";
+            Program.WriteLine(text, onlyToFile: true);
+            Console.Error.WriteLine(text);
+        }
+    }
 
     // TODO?
     public void SetProgressBar(string message, string status, double currentValue, double maxValue) { }
     public void UpdateProgressValue(double currentValue) { }
     public void IncrementProgress() { }
     public int GetProgress() => -1;
+
+    // Not in `IScriptInterface`
+    public void ShowMessage(string message, bool dummy = false)
+    {
+        if (!dummy)
+            Win32API.ShowMessage(message);
+    }
+    public void ShowWarning(string message, bool dummy = false)
+    {
+        if (!dummy)
+            Win32API.ShowWarning(message);
+    }
 }
