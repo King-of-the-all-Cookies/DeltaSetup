@@ -1,6 +1,6 @@
 [Setup]
 AppName=Русификатор DELTARUNE
-AppVersion=1.2.1
+AppVersion=1.2.2
 AppPublisher=LazyDesman
 DefaultDirName={autopf}\DELTARUNE Russian Patch
 OutputBaseFilename=DeltaruneRussianPatcherSetup
@@ -34,8 +34,10 @@ var
   InfoPage: TOutputMsgWizardPage;
   GamePathPage: TInputDirWizardPage;
   ProgressPage: TOutputProgressWizardPage;
+  
   FinishedText: String;
   ForceClose: Boolean;
+  ExistingDrives: TArrayOfString;
 
 procedure CloseInstaller;
 begin
@@ -48,24 +50,58 @@ begin
   Confirm := not ForceClose;
 end;
 
+procedure InitExistingDrives;
+var
+  DriveLetter: Char;
+  i, DriveCount: Integer;
+begin
+  for i := Ord('C') to Ord('Z') do
+  begin
+    DriveLetter := Chr(i);
+    if DirExists(DriveLetter + ':\') then
+    begin
+      DriveCount := GetArrayLength(ExistingDrives);
+      SetArrayLength(ExistingDrives, DriveCount + 1);
+      ExistingDrives[DriveCount] := DriveLetter + ':';
+    end;
+  end;
+end;
+
 // Поиск DELTARUNE.exe
 function FindGameExe(): String;
 var
+  GameExeLocations: array[0..3] of String;
+  DrivePrefix, Location, FullPath: String;
   i, j: Integer;
-  Drive, FullPath: String;
-  Paths: array[0..3] of String;
 begin
-  Paths[0] := '\Program Files (x86)\Steam\steamapps\common\DELTARUNE\DELTARUNE.exe';
-  Paths[1] := '\Program Files (x86)\DELTARUNE\DELTARUNE.exe';
-  Paths[2] := '\DELTARUNE\DELTARUNE.exe';
-  Paths[3] := '\Program Files\DELTARUNE\DELTARUNE.exe';
-  Result := '';
-  for i := Ord('C') to Ord('Z') do
+  GameExeLocations[0] := '\Program Files (x86)\Steam\steamapps\common\DELTARUNE\DELTARUNE.exe';
+  GameExeLocations[1] := '\Program Files (x86)\DELTARUNE\DELTARUNE.exe';
+  GameExeLocations[2] := '\DELTARUNE\DELTARUNE.exe';
+  GameExeLocations[3] := '\Program Files\DELTARUNE\DELTARUNE.exe';
+
+  // Steam Deck
+  Result := 'Z:\home\deck\.local\share\Steam\steamapps\common\DELTARUNE\DELTARUNE.exe';
+  if (FileExists(Result)) then
   begin
-    Drive := Chr(i) + ':';
-    for j := 0 to High(Paths) do
+    Exit;
+  end
+  else
+  begin
+    Result := ExpandConstant('Z:\home\{username}\.local\share\Steam\steamapps\common\DELTARUNE\DELTARUNE.exe');
+    if (FileExists(Result)) then
+      Exit;
+  end;
+  
+  Result := '';
+  
+  // Windows ПК
+  for i := 0 to High(ExistingDrives) do
+  begin
+    DrivePrefix := ExistingDrives[i];
+    
+    for j := 0 to High(GameExeLocations) do
     begin
-      FullPath := Drive + Paths[j];
+      FullPath := DrivePrefix + GameExeLocations[j];
       if FileExists(FullPath) then
       begin
         Result := FullPath;
@@ -97,18 +133,20 @@ begin
     InfoPage.ID,
     'Выберите папку DELTARUNE',
     'Где установлена игра?',
-    'Выберите папку, содержащую DELTARUNE.exe и папки chapter1_windows, chapter2_windows и т.д.'#13#10 +
+    'Выберите папку, содержащую "DELTARUNE.exe" и папки "chapter1_windows" ... "chapter4_windows".'#13#10 +
     'Обычно это выглядит так: "C:\Program Files (x86)\Steam\steamapps\common\DELTARUNE"',
     False, ''
   );
   GamePathPage.Add('');
-  GamePathPage.Values[0] := 'C:\Program Files (x86)\Steam\steamapps\common\DELTARUNE';
+  GamePathPage.Values[0] := ExpandConstant('{sd}\Program Files (x86)\Steam\steamapps\common\DELTARUNE');
   
   FinishedText := 'Русификатор DELTARUNE успешно установлен на ваш компьютер.' + #13#10 +
                   + #13#10 +
                   'Нажмите «Завершить», чтобы выйти из программы установки.';
 
   ProgressPage := CreateOutputProgressPage('Выполнение установки', 'Пожалуйста, подождите...');
+  
+  InitExistingDrives;
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
@@ -122,13 +160,13 @@ begin
     if FoundExe <> '' then
       GamePathPage.Values[0] := ExtractFilePath(FoundExe)
     else
-      MsgBox('DELTARUNE.exe не найден в стандартных папках. Пожалуйста, укажите путь вручную.', mbInformation, MB_OK);
+      MsgBox('"DELTARUNE.exe" не найден в стандартных папках. Пожалуйста, укажите путь вручную.', mbInformation, MB_OK);
   end
   else if CurPageID = GamePathPage.ID then
   begin
     if not FileExists(AddBackslash(GamePathPage.Values[0]) + 'DELTARUNE.exe') then
     begin
-      MsgBox('Не найден DELTARUNE.exe в указанной папке!', mbError, MB_OK);
+      MsgBox('Не найден "DELTARUNE.exe" в указанной папке!', mbError, MB_OK);
       Result := False;
     end;
   end;
@@ -193,7 +231,7 @@ begin
         MsgBox('Ошибка применения патча: ' + FirstLogLine + #13#10 +
                'Лог установщика сохранён в файл "' + LogPath + '".', mbError, MB_OK);
         Result := True;
-        exit;
+        Exit;
       end;
     end;
   end;
@@ -218,7 +256,7 @@ begin
   except
     MsgBox('В процессе скачивания файлов произошла ошибка: ' + GetExceptionMessage(), mbError, MB_OK);
     Result := False;
-    exit;
+    Exit;
   end;
   
   try
@@ -241,19 +279,19 @@ begin
           MsgBox('Ошибка применения патча, код ошибки: ' + IntToStr(ResultCode) + '.', mbError, MB_OK);
         
         Result := False;
-        exit;
+        Exit;
       end;
     end
     else
     begin
       MsgBox('Не удалось запустить патчер.', mbError, MB_OK);
       Result := False;
-      exit;
+      Exit;
     end;
   except
     MsgBox('В процессе установки произошла ошибка: ' + GetExceptionMessage(), mbError, MB_OK);
     Result := False;
-    exit;
+    Exit;
   finally
     ProgressPage.Hide;
   end;
