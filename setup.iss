@@ -39,17 +39,6 @@ var
   ForceClose: Boolean;
   ExistingDrives: TArrayOfString;
 
-procedure CloseInstaller;
-begin
-  ForceClose := True;
-  WizardForm.Close;
-end;
-
-procedure CancelButtonClick(CurPageID: Integer; var Cancel, Confirm: Boolean);
-begin
-  Confirm := not ForceClose;
-end;
-
 procedure InitExistingDrives;
 var
   DriveLetter: Char;
@@ -317,4 +306,15 @@ begin
     WizardForm.FinishedHeadingLabel.Caption := 'Завершение установки русификатора DELTARUNE';
     WizardForm.FinishedLabel.Caption := FinishedText;
   end;
+end;
+
+procedure CloseInstaller;
+begin
+  ForceClose := True;
+  WizardForm.Close;
+end;
+
+procedure CancelButtonClick(CurPageID: Integer; var Cancel, Confirm: Boolean);
+begin
+  Confirm := not ForceClose;
 end;
