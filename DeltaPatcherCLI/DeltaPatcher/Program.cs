@@ -130,6 +130,31 @@ class Program
         if (writeOutputToFile)
             outputTextBuilder.AppendLine(line);
     }
+
+    private static void RemoveReadOnlyAttr(string filePath)
+    {
+        try
+        {
+            FileAttributes attributes = File.GetAttributes(filePath);
+            if (attributes.HasFlag(FileAttributes.ReadOnly))
+                File.SetAttributes(filePath, attributes & ~FileAttributes.ReadOnly);
+        }
+        catch
+        {
+            WriteLine($"Внимание - не удалось проверить наличие аттрибута (или убрать) \"Только чтение\" у файла \"{Path.GetFileName(filePath)}\".");
+        }
+    }
+    public static void FileCopyNoRO(string sourceFileName, string destFileName, bool overwrite = false)
+    {
+        RemoveReadOnlyAttr(destFileName);
+        File.Copy(sourceFileName, destFileName, overwrite);
+    }
+    public static FileStream FileCreateNoRO(string filePath)
+    {
+        RemoveReadOnlyAttr(filePath);
+        return File.Create(filePath);
+    }
+
     private static bool ValidatePaths(string gamePath, string scriptsPath)
     {
         try
@@ -196,12 +221,12 @@ class Program
             if (File.Exists(backupPath))
             {
                 WriteLine("- Восстановление из предыдущей резервной копии...");
-                File.Copy(backupPath, dataWinPath, true);
+                FileCopyNoRO(backupPath, dataWinPath, true);
             }
             else
             {
                 WriteLine("- Создание резервной копии...");
-                File.Copy(dataWinPath, backupPath, true);
+                FileCopyNoRO(dataWinPath, backupPath, true);
             }
 
             // читаем и модим
@@ -236,7 +261,7 @@ class Program
             await CSharpScript.RunAsync(script, scriptOptions, globals: scriptGlobals);
 
             WriteLine("- Сохранение изменений...");
-            using (var fileStream = File.Create(dataWinPath))
+            using (var fileStream = FileCreateNoRO(dataWinPath))
             {
                 UndertaleIO.Write(fileStream, data);
             }

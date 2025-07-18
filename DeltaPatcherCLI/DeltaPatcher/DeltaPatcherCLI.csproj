@@ -1,26 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<OutputType>Exe</OutputType>
-		<TargetFramework>net8.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>disable</Nullable>
-		<!-- Настройки для единого EXE-файла -->
-		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
-		<SelfContained>true</SelfContained>
-		<PublishSingleFile>true</PublishSingleFile>
-		<PublishTrimmed>true</PublishTrimmed>
-		<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-		<IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
-		<!-- PDB внутри .exe -->
-		<DebugType>embedded</DebugType>
-		<!-- Системные ресурсы (текст ошибок) только для русского языка -->
-		<NeutralLanguage>ru</NeutralLanguage>
-		<ResourceLanguages>ru</ResourceLanguages>
-		<SatelliteResourceLanguages>ru</SatelliteResourceLanguages>
-	</PropertyGroup>
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <!-- Настройки для единого EXE-файла -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>true</PublishTrimmed>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+    <!-- PDB внутри .exe -->
+    <DebugType>embedded</DebugType>
+    <!-- Системные ресурсы (текст ошибок) только для русского языка -->
+    <NeutralLanguage>ru</NeutralLanguage>
+    <ResourceLanguages>ru</ResourceLanguages>
+    <SatelliteResourceLanguages>ru</SatelliteResourceLanguages>
+  </PropertyGroup>
 
   <PropertyGroup>
-    <Version>1.2.0</Version>
+    <Version>1.3.0</Version>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <Product>Установщик DelTranslate</Product>
     <AssemblyTitle>DelTranslatePatcherCLI</AssemblyTitle>
@@ -28,27 +28,27 @@
     <Copyright>Copyright 2025</Copyright>
   </PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.8.0" />
-	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.8.0" />
+  </ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\UndertaleModTool\Underanalyzer\Underanalyzer\Underanalyzer.csproj" />
-		<ProjectReference Include="..\UndertaleModTool\UndertaleModLib\UndertaleModLib.csproj" />
-		<TrimmerRootAssembly Include="Underanalyzer" />
-		<TrimmerRootAssembly Include="UndertaleModLib" />
-	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\UndertaleModTool\Underanalyzer\Underanalyzer\Underanalyzer.csproj" />
+    <ProjectReference Include="..\UndertaleModTool\UndertaleModLib\UndertaleModLib.csproj" />
+    <TrimmerRootAssembly Include="Underanalyzer" />
+    <TrimmerRootAssembly Include="UndertaleModLib" />
+  </ItemGroup>
 
-	<!-- UndertaleModLib почему-то игнорирует `<GenerateDocumentationFile>false</GenerateDocumentationFile>` -->
-	<!-- TODO: никак не сделать чтобы заработало -->
-	<Target Name="DeleteXML" AfterTargets="AfterPublish">
-		<Message Text="$(PublishDir)UndertaleModLib.xml" Importance="high" />
-		<Exec Command="del /F /Q $(PublishDir)UndertaleModLib.xml" IgnoreExitCode="true" />
-	</Target>
+  <!-- UndertaleModLib почему-то игнорирует `<GenerateDocumentationFile>false</GenerateDocumentationFile>` -->
+  <!-- TODO: никак не сделать чтобы заработало -->
+  <Target Name="DeleteXML" AfterTargets="AfterPublish">
+    <Message Text="$(PublishDir)UndertaleModLib.xml" Importance="high" />
+    <Exec Command="del /F /Q $(PublishDir)UndertaleModLib.xml" IgnoreExitCode="true" />
+  </Target>
 
-	<!-- Оптимизация размера -->
-	<PropertyGroup>
-		<TrimMode>copyused</TrimMode>
-		<JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
-	</PropertyGroup>
+  <!-- Оптимизация размера -->
+  <PropertyGroup>
+    <TrimMode>copyused</TrimMode>
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+  </PropertyGroup>
 </Project>
