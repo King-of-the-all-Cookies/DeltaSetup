@@ -319,6 +319,11 @@ class Program
 // передаём данные в скрипты
 public class ScriptGlobals
 {
+    /// <inheritdoc />
+    public class ScriptException : UndertaleModLib.Scripting.ScriptException
+    {
+    }
+
     public UndertaleData Data { get; set; }
     public string FilePath { get; set; }
     public string ScriptPath { get; set; }
