@@ -1,6 +1,6 @@
 [Setup]
 AppName=Русификатор DELTARUNE
-AppVersion=1.3.0
+AppVersion=1.4.0
 AppPublisher=LazyDesman
 DefaultDirName={autopf}\DELTARUNE Russian Patch
 OutputBaseFilename=DeltaruneRussianPatcherSetup
@@ -14,6 +14,7 @@ DisableDirPage=yes
 DisableWelcomePage=no
 WizardSmallImageFile=logo.bmp
 WizardImageFile=banner.bmp
+// SetupLogging=True
 
 [Languages]
 Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
@@ -241,9 +242,82 @@ begin
   Result := False;
 end;
 
+procedure HandleExtractionError(const ArchiveName, DestDir: String; ExceptionMsg: String);
+var
+  MsgParts: TArrayOfString;
+  Handled: Boolean;
+  (*LogPath, ErrorCodeStr: String;
+  LogText: AnsiString;
+  CodePos, CodeStart, CodeEnd: Integer;*)
+begin
+  Handled := False;
+
+  MsgParts := StringSplit(ExceptionMsg, [': '], stAll);
+  if Length(MsgParts) = 2 then
+  begin
+    if MsgParts[1] = '1' then
+    begin
+      ExceptionMsg := Format('Не удалось распаковать архив "%s" из-за неизвестной ошибки.', [ArchiveName]) + #1310 +
+                      'Путь распаковки - ' + DestDir;
+      Handled := True;
+    end
+    else
+      if MsgParts[1] = '11' then
+      begin
+        // TODO: extract actual error code from setup log
+        (*
+        LogPath := ExpandConstant('{log}');
+        if LoadStringFromLockedFile(LogPath, LogText) then
+        begin
+          CodePos := RPos('System error code: ', LogText); // `RPos()` doesn't exist
+          if CodePos > 0 then
+          begin
+            // Move to the start of the code
+            CodeStart := CodePos + Length(SearchStr);
+            // Find the end of the code (first non-digit)
+            CodeEnd := CodeStart;
+            while (CodeEnd <= Length(LogContents)) and (LogContents[CodeEnd] in ['0'..'9']) do
+              Inc(CodeEnd);
+            TempStr := Copy(LogContents, CodeStart, CodeEnd - CodeStart);
+            // Convert to integer if possible
+            try
+              Result := StrToInt(TempStr);
+            except
+              // Leave as -1 if conversion fails
+            end;
+          end;
+        end;
+        *)
+        
+        ExceptionMsg := Format('Не удалось распаковать архив "%s" - нет доступа к файлу(-ам), возможно, он(и) занят(ы) другим процессом.', [ArchiveName]) + #13#10 +
+                        + #13#10 +
+                        'Если у папки с игрой стоит атрибут "Только для чтения", тогда уберите его (не забудьте "Применить") и попробуйте снова.';
+        Handled := True;
+      end;
+  end;
+  
+  if not Handled then
+    RaiseException(ExceptionMsg);
+  
+  MsgBox(ExceptionMsg, mbCriticalError, MB_OK);
+  RaiseException('empty');
+end;
+
+procedure ExtractArchive(const ArchiveFilePath, DestDir: String);
+begin
+  if not FileExists(ArchiveFilePath) then
+    RaiseException('Файл архива не найден, путь - ' + ArchiveFilePath);
+  
+  try
+    Extract7ZipArchive(ArchiveFilePath, DestDir, True, @OnProgress);
+  except
+    HandleExtractionError(ExtractFileName(ArchiveFilePath), DestDir, GetExceptionMessage());
+  end;
+end;
+
 function DownloadAndExtractFiles(): Boolean;
 var
-  LangZipPath, ScriptsZipPath, PatcherZipPath, GamePath, PatcherPath: String;
+  LangZipPath, ScriptsZipPath, PatcherZipPath, GamePath, PatcherPath, ExceptionMsg: String;
   ResultCode: Integer;
 begin
   LangZipPath := ExpandConstant('{tmp}\lang.7z');
@@ -263,13 +337,13 @@ begin
   
   try
     ProgressPage.SetText('Распаковка патчера...', '');
-    Extract7ZipArchive(PatcherZipPath, ExpandConstant('{tmp}'), True, @OnProgress);
+    ExtractArchive(PatcherZipPath, ExpandConstant('{tmp}'));
 
     ProgressPage.SetText('Распаковка языковых файлов...', '');
-    Extract7ZipArchive(LangZipPath, GamePath, True, @OnProgress);
+    ExtractArchive(LangZipPath, GamePath);
 
     ProgressPage.SetText('Распаковка скриптов...', '');
-    Extract7ZipArchive(ScriptsZipPath, ExpandConstant('{tmp}\scripts'), True, @OnProgress);
+    ExtractArchive(ScriptsZipPath, ExpandConstant('{tmp}\scripts'));
     
     ProgressPage.SetText('Применение патча...', '');
     PatcherPath := ExpandConstant('{tmp}\DeltaPatcherCLI.exe');
@@ -278,7 +352,7 @@ begin
       if ResultCode <> 0 then
       begin
         if not HandlePatcherError(GamePath) then
-          MsgBox('Ошибка применения патча, код ошибки: ' + IntToStr(ResultCode) + '.', mbError, MB_OK);
+          MsgBox('Ошибка применения патча, код ошибки: ' + IntToStr(ResultCode) + '.', mbCriticalError, MB_OK);
         
         Result := False;
         Exit;
@@ -286,12 +360,15 @@ begin
     end
     else
     begin
-      MsgBox('Не удалось запустить патчер.', mbError, MB_OK);
+      MsgBox('Не удалось запустить патчер.', mbCriticalError, MB_OK);
       Result := False;
       Exit;
     end;
   except
-    MsgBox('В процессе установки произошла ошибка: ' + GetExceptionMessage(), mbError, MB_OK);
+    ExceptionMsg := GetExceptionMessage();
+    if ExceptionMsg <> 'empty' then
+      MsgBox('В процессе установки произошла ошибка: ' + #13#10 + GetExceptionMessage(), mbCriticalError, MB_OK);
+    
     Result := False;
     Exit;
   finally
