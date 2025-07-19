@@ -1,6 +1,6 @@
 [Setup]
 AppName=Русификатор DELTARUNE
-AppVersion=1.2.2
+AppVersion=1.3.0
 AppPublisher=LazyDesman
 DefaultDirName={autopf}\DELTARUNE Russian Patch
 OutputBaseFilename=DeltaruneRussianPatcherSetup
@@ -30,6 +30,8 @@ const
   LangURLMirror = 'https://filldor.ru/deltaRU/lang.7z';
   ScriptsURL = 'https://github.com/Lazy-Desman/DeltaruneRus/releases/download/latest/scripts.7z';
   ScriptsURLMirror = 'https://filldor.ru/deltaRU/scripts.7z';
+  
+  DeltaruneExe = 'DELTARUNE.exe';
 var
   InfoPage: TOutputMsgWizardPage;
   GamePathPage: TInputDirWizardPage;
@@ -56,28 +58,36 @@ begin
   end;
 end;
 
-// Поиск DELTARUNE.exe
-function FindGameExe(): String;
+// Находится ли в папке полная версия DELTARUNE
+function CheckDeltaruneLoc(DirPath: String): Boolean;
+begin
+  Result := FileExists(DirPath + DeltaruneExe);
+  if Result then
+    Result := FileExists(AddBackslash(DirPath) + 'chapter4_windows\data.win');
+end;
+
+// Поиск папки DELTARUNE
+function FindGameLocation(): String;
 var
-  GameExeLocations: array[0..3] of String;
-  DrivePrefix, Location, FullPath: String;
+  GameLocations: array[0..3] of String;
+  DrivePrefix, Location: String;
   i, j: Integer;
 begin
-  GameExeLocations[0] := '\Program Files (x86)\Steam\steamapps\common\DELTARUNE\DELTARUNE.exe';
-  GameExeLocations[1] := '\Program Files (x86)\DELTARUNE\DELTARUNE.exe';
-  GameExeLocations[2] := '\DELTARUNE\DELTARUNE.exe';
-  GameExeLocations[3] := '\Program Files\DELTARUNE\DELTARUNE.exe';
+  GameLocations[0] := '\Program Files (x86)\Steam\steamapps\common\DELTARUNE\';
+  GameLocations[1] := '\Program Files (x86)\DELTARUNE\';
+  GameLocations[2] := '\DELTARUNE\';
+  GameLocations[3] := '\Program Files\DELTARUNE\';
 
   // Steam Deck
-  Result := 'Z:\home\deck\.local\share\Steam\steamapps\common\DELTARUNE\DELTARUNE.exe';
-  if (FileExists(Result)) then
+  Result := 'Z:\home\deck\.local\share\Steam\steamapps\common\DELTARUNE\';
+  if CheckDeltaruneLoc(Result) then
   begin
     Exit;
   end
   else
   begin
-    Result := ExpandConstant('Z:\home\{username}\.local\share\Steam\steamapps\common\DELTARUNE\DELTARUNE.exe');
-    if (FileExists(Result)) then
+    Result := ExpandConstant('Z:\home\{username}\.local\share\Steam\steamapps\common\DELTARUNE\');
+    if CheckDeltaruneLoc(Result) then
       Exit;
   end;
   
@@ -88,12 +98,12 @@ begin
   begin
     DrivePrefix := ExistingDrives[i];
     
-    for j := 0 to High(GameExeLocations) do
+    for j := 0 to High(GameLocations) do
     begin
-      FullPath := DrivePrefix + GameExeLocations[j];
-      if FileExists(FullPath) then
+      Location := DrivePrefix + GameLocations[j];
+      if CheckDeltaruneLoc(Location) then
       begin
-        Result := FullPath;
+        Result := Location;
         Exit;
       end;
     end;
@@ -140,20 +150,22 @@ end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
 var
-  FoundExe: String;
+  FoundGameLoc: String;
 begin
   Result := True;
+  
   if CurPageID = InfoPage.ID then
   begin
-    FoundExe := FindGameExe();
-    if FoundExe <> '' then
-      GamePathPage.Values[0] := ExtractFilePath(FoundExe)
-    else
-      MsgBox('"DELTARUNE.exe" не найден в стандартных папках. Пожалуйста, укажите путь вручную.', mbInformation, MB_OK);
+    FoundGameLoc := FindGameLocation();
+    if FoundGameLoc = '' then
+    begin
+      MsgBox('DELTARUNE (главы 1-4) не найден в стандартных папках. Пожалуйста, укажите путь вручную.', mbInformation, MB_OK);
+      Exit;
+    end;
   end
   else if CurPageID = GamePathPage.ID then
   begin
-    if not FileExists(AddBackslash(GamePathPage.Values[0]) + 'DELTARUNE.exe') then
+    if not FileExists(AddBackslash(GamePathPage.Values[0]) + DeltaruneExe) then
     begin
       MsgBox('Не найден "DELTARUNE.exe" в указанной папке!', mbError, MB_OK);
       Result := False;
@@ -217,7 +229,8 @@ begin
       begin
         FirstLogLine := Copy(LogText, 1, LineEndPos - 1);
         
-        MsgBox('Ошибка применения патча: ' + FirstLogLine + #13#10 +
+        MsgBox('Ошибка применения патча: ' + FirstLogLine + #13#10
+               + #13#10 +
                'Лог установщика сохранён в файл "' + LogPath + '".', mbError, MB_OK);
         Result := True;
         Exit;
