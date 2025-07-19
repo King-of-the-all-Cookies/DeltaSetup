@@ -281,6 +281,7 @@ class Program
             scriptGlobals.GetProgress();
             scriptGlobals.ShowMessage(null, true);
             scriptGlobals.ShowWarning(null, true);
+            new ScriptGlobals.ScriptException("abc");
 
             await CSharpScript.RunAsync(script, scriptOptions, globals: scriptGlobals);
 
@@ -322,6 +323,10 @@ public class ScriptGlobals
     /// <inheritdoc />
     public class ScriptException : UndertaleModLib.Scripting.ScriptException
     {
+        /// <inheritdoc />
+        public ScriptException() : base() { }
+        /// <inheritdoc />
+        public ScriptException(string msg) : base(msg) { }
     }
 
     public UndertaleData Data { get; set; }
