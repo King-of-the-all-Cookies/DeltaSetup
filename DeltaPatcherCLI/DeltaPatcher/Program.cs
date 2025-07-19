@@ -59,8 +59,8 @@ class Program
             }
 
             scriptOptions = ScriptOptions.Default
-                            .AddImports("UndertaleModLib", "UndertaleModLib.Models", "UndertaleModLib.Decompiler",
-                                        "UndertaleModLib.Scripting", "UndertaleModLib.Compiler",
+                            .AddImports("UndertaleModLib", "UndertaleModLib.Models",
+                                        "UndertaleModLib.Compiler", "UndertaleModLib.Decompiler",
                                         "System", "System.IO", "System.Collections.Generic",
                                         "System.Text.RegularExpressions")
                             .AddReferences(typeof(UndertaleObject).GetTypeInfo().Assembly,
