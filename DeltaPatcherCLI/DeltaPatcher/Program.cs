@@ -9,6 +9,9 @@ using UndertaleModLib;
 using System.Runtime;
 using System.Text;
 using UndertaleModLib.Scripting;
+using Microsoft.CodeAnalysis;
+using System.Collections.Immutable;
+using System.Globalization;
 
 namespace DeltaPatcherCLI;
 
@@ -66,7 +69,8 @@ class Program
                             .AddReferences(typeof(UndertaleObject).GetTypeInfo().Assembly,
                                            typeof(Program).GetTypeInfo().Assembly,
                                            typeof(System.Text.RegularExpressions.Regex).GetTypeInfo().Assembly,
-                                           typeof(Underanalyzer.Decompiler.DecompileContext).Assembly);
+                                           typeof(Underanalyzer.Decompiler.DecompileContext).Assembly)
+                            .WithFileEncoding(Encoding.UTF8);
 
             // Отключить возможность быстрого выбора текста мышью,
             // чтобы предотвратить зависание при случайном выделении.
@@ -122,7 +126,7 @@ class Program
                 else
                     logText = $"{ex}\n\n\n{outputTextBuilder}";
 
-                File.WriteAllText(logPath, logText, Encoding.GetEncoding(1251));
+                File.WriteAllText(logPath, logText, GetCurrentEncoding());
 
                 WriteLine("-----------------------------------");
                 WriteLine($"Детали ошибки и лог установщика сохранены в файл: \"{logPath}\".");
@@ -139,6 +143,18 @@ class Program
         }
     }
 
+
+    public static Encoding GetCurrentEncoding()
+    {
+        try
+        {
+            int currCodePage = CultureInfo.CurrentCulture.TextInfo.ANSICodePage;
+            return Encoding.GetEncoding(currCodePage);
+        }
+        catch { }
+
+        return Encoding.Default;
+    }
 
     public static void WriteLine(string line = null, bool onlyToFile = false)
     {
@@ -233,7 +249,7 @@ class Program
 
             if (!File.Exists(scriptPath))
             {
-                throw new FileNotFoundException($"Скрипт патча не найдена: {scriptPath}");
+                throw new FileNotFoundException($"Скрипт патча не найден: {scriptPath}");
             }
 
             // бэкапы
@@ -283,7 +299,9 @@ class Program
             scriptGlobals.ShowWarning(null, true);
             new ScriptGlobals.ScriptException("abc");
 
-            await CSharpScript.RunAsync(script, scriptOptions, globals: scriptGlobals);
+            SourceFileResolver srcResolver = new(searchPaths: ImmutableArray<string>.Empty,
+                                                 baseDirectory: Path.GetFullPath(scriptsPath));
+            await CSharpScript.RunAsync(script, scriptOptions.WithSourceResolver(srcResolver), globals: scriptGlobals);
 
             WriteLine("- Сохранение изменений...");
             using (var fileStream = FileCreateNoRO(dataWinPath))
