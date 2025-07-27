@@ -253,17 +253,17 @@ class Program
             }
 
             // бэкапы
-            string backupPath = dataWinPath + ".backup";
-            if (File.Exists(backupPath))
-            {
-                WriteLine("- Восстановление из предыдущей резервной копии...");
-                FileCopyNoRO(backupPath, dataWinPath, true);
-            }
-            else
-            {
-                WriteLine("- Создание резервной копии...");
-                FileCopyNoRO(dataWinPath, backupPath, true);
-            }
+            // string backupPath = dataWinPath + ".backup";
+            // if (File.Exists(backupPath))
+            // {
+            //     WriteLine("- Восстановление из предыдущей резервной копии...");
+            //     FileCopyNoRO(backupPath, dataWinPath, true);
+            // }
+            // else
+            // {
+            //     WriteLine("- Создание резервной копии...");
+            //     FileCopyNoRO(dataWinPath, backupPath, true);
+            // }
 
             // читаем и модим
             WriteLine("- Чтение data.win...");
@@ -300,7 +300,7 @@ class Program
             new ScriptGlobals.ScriptException("abc");
 
             SourceFileResolver srcResolver = new(searchPaths: ImmutableArray<string>.Empty,
-                                                 baseDirectory: Path.GetFullPath(scriptsPath));
+                                                 baseDirectory: Path.GetDirectoryName(Path.GetFullPath(scriptPath)));
             await CSharpScript.RunAsync(script, scriptOptions.WithSourceResolver(srcResolver), globals: scriptGlobals);
 
             WriteLine("- Сохранение изменений...");
