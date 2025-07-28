@@ -1,6 +1,6 @@
 [Setup]
 AppName=Русификатор DELTARUNE
-AppVersion=1.4.0
+AppVersion=1.4.1
 AppPublisher=LazyDesman
 DefaultDirName={autopf}\DELTARUNE Russian Patch
 OutputBaseFilename=DeltaruneRussianPatcherSetup
@@ -71,23 +71,29 @@ end;
 function FindGameLocation(): String;
 var
   GameLocations: array[0..3] of String;
-  DrivePrefix, Location: String;
+  GameLocationsLinux: array[0..1] of String;
+  DrivePrefix, Location, UserName: String;
   i, j: Integer;
 begin
   GameLocations[0] := '\Program Files (x86)\Steam\steamapps\common\DELTARUNE\';
   GameLocations[1] := '\Program Files (x86)\DELTARUNE\';
   GameLocations[2] := '\DELTARUNE\';
   GameLocations[3] := '\Program Files\DELTARUNE\';
-
+  
   // Steam Deck
-  Result := 'Z:\home\deck\.local\share\Steam\steamapps\common\DELTARUNE\';
-  if CheckDeltaruneLoc(Result) then
+  GameLocationsLinux[0] := 'Z:\home\%s\.local\share\Steam\steamapps\common\DELTARUNE\';
+  GameLocationsLinux[1] := 'Z:\home\%s\.var\app\com.valvesoftware.Steam\.local\share\Steam\steamapps\common\DELTARUNE\';
+  UserName := GetUserNameString();
+
+  for i := 0 to High(GameLocationsLinux) do
   begin
-    Exit;
-  end
-  else
-  begin
-    Result := ExpandConstant('Z:\home\{username}\.local\share\Steam\steamapps\common\DELTARUNE\');
+    Location := GameLocationsLinux[i];
+    
+    Result := Format(Location, ['deck']); // Default Steam Deck user name
+    if CheckDeltaruneLoc(Result) then
+      Exit;
+    
+    Result := Format(Location, [UserName]);
     if CheckDeltaruneLoc(Result) then
       Exit;
   end;
@@ -212,8 +218,8 @@ end;
 
 function HandlePatcherError(GamePath: String): Boolean;
 var
-  LogPath, FirstLogLine: String;
-  LogText: AnsiString;
+  LogPath, LogText, FirstLogLine: String;
+  LogTextRaw: AnsiString;
   LineEndPos: Integer;
 begin
   if GamePath[Length(GamePath)] = '\' then
@@ -223,8 +229,9 @@ begin
   
   if FileExists(LogPath) then
   begin
-    if LoadStringFromFile(LogPath, LogText) then
+    if LoadStringFromFile(LogPath, LogTextRaw) then
     begin
+      LogText := UTF8Decode(LogTextRaw);
       LineEndPos := Pos(#13#10, LogText);
       if (LineEndPos > 0) and (LineEndPos < 512) then
       begin

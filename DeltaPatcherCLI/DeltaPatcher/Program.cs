@@ -118,15 +118,13 @@ class Program
             string logPath = Path.Combine(gamePath, "deltapatcher-log.txt");
             try
             {
-                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
                 string logText;
                 if (ex is ScriptException)
                     logText = $"{ex.Message}\n\n\n{outputTextBuilder}";
                 else
                     logText = $"{ex}\n\n\n{outputTextBuilder}";
 
-                File.WriteAllText(logPath, logText, GetCurrentEncoding());
+                File.WriteAllText(logPath, logText, Encoding.UTF8);
 
                 WriteLine("-----------------------------------");
                 WriteLine($"Детали ошибки и лог установщика сохранены в файл: \"{logPath}\".");
@@ -141,19 +139,6 @@ class Program
             
             Environment.Exit(2);
         }
-    }
-
-
-    public static Encoding GetCurrentEncoding()
-    {
-        try
-        {
-            int currCodePage = CultureInfo.CurrentCulture.TextInfo.ANSICodePage;
-            return Encoding.GetEncoding(currCodePage);
-        }
-        catch { }
-
-        return Encoding.Default;
     }
 
     public static void WriteLine(string line = null, bool onlyToFile = false)
