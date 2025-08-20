@@ -81,10 +81,42 @@ class Program
             await ApplyChapterPatch(gamePath, scriptsPath, "Chapter1", @"chapter1_windows\data.win");
             await ApplyChapterPatch(gamePath, scriptsPath, "Chapter2", @"chapter2_windows\data.win");
             await ApplyChapterPatch(gamePath, scriptsPath, "Chapter3", @"chapter3_windows\data.win");
+            await ApplyChapterPatch(gamePath, scriptsPath, "Chapter4", @"chapter4_windows\data.win");
+
 
             ConsoleQuickEditSwitcher.SwitchQuickMode(true);
 
             WriteLine("-----------------------------------");
+            
+            string changesPath = Path.Combine(scriptsPath, "changes.json");
+            if (File.Exists(changesPath))
+            {
+                WriteLine($"- Запись текущей версии мода в папку игру.");
+                Dictionary<string, Dictionary<string, string>> modChanges;
+                using StreamReader r = new StreamReader(changesPath);
+                string json = r.ReadToEnd();
+                modChanges = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(json);
+                // string lastVersion = "0.0.0";
+                // foreach (var key in modChanges.Keys) {
+                //     if (key > lastVersion) {
+                //         lastVersion = key;
+                //     }
+                // }
+                // WriteLine(lastVersion);
+                Version lastVersion = new Version("0.0.0");
+                foreach (var key in modChanges.Keys) {
+                    var v = new Version(key);
+                    if (v > lastVersion) {
+                        lastVersion = v;
+                    }
+                }
+                WriteLine($"- Текущая версия: " + lastVersion.ToString());
+
+                File.WriteAllText(Path.Combine(gamePath, "version_dt.txt"), lastVersion.ToString(), Encoding.UTF8);
+            } else {
+                WriteLine($"- Отсутствует файл с версиями мода.");
+            }
+            
             WriteLine("Патч успешно применён!");
             WriteLine("Теперь можно запускать игру с русским переводом");
             Environment.Exit(0);
